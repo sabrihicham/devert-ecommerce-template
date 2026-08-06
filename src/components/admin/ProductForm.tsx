@@ -66,7 +66,13 @@ export function ProductForm({
 
     formData.append("name", basicInfoRef.current.name);
     formData.append("description", basicInfoRef.current.description);
-    formData.append("price", basicInfoRef.current.price);
+    formData.append("brand", basicInfoRef.current.brand);
+    formData.append("ingredients", basicInfoRef.current.ingredients);
+    formData.append("usage", basicInfoRef.current.usage);
+    formData.append("warnings", basicInfoRef.current.warnings);
+    formData.append("tags", JSON.stringify(basicInfoRef.current.tags));
+    formData.append("price", String(basicInfoRef.current.price));
+    if (basicInfoRef.current.compareAtPrice != null) formData.append("compareAtPrice", String(basicInfoRef.current.compareAtPrice));
     formData.append("category", basicInfoRef.current.category);
     formData.append("isFeatured", String(basicInfoRef.current.isFeatured));
 
@@ -94,8 +100,16 @@ export function ProductForm({
     // Include variant data with existing images info for edit mode
     const variantsForSubmit = variantsData.map((v) => ({
       id: v.id,
-      color: v.color,
-      sizes: v.sizes,
+      flavor: v.flavor,
+      form: v.form,
+      quantity: v.quantity,
+      quantityUnit: v.quantityUnit,
+      servings: v.servings,
+      sku: v.sku,
+      price: v.price,
+      compareAtPrice: v.compareAtPrice,
+      stock: v.stock,
+      isActive: v.isActive,
       imageCount: v.imageCount,
       existingImages: v.existingImages,
       removedImages: v.removedImages,
@@ -178,9 +192,9 @@ export function ProductForm({
               <FiPackage className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-lg">Basic Information</CardTitle>
+              <CardTitle className="text-lg">معلومات المنتج</CardTitle>
               <CardDescription>
-                Product name, description, price and category
+                بيانات المكمل الأساسية
               </CardDescription>
             </div>
           </div>
@@ -203,7 +217,7 @@ export function ProductForm({
               <FiImage className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-lg">Main Image</CardTitle>
+              <CardTitle className="text-lg">الصورة الرئيسية</CardTitle>
               <CardDescription>
                 Primary product image displayed in listings
               </CardDescription>
@@ -227,9 +241,9 @@ export function ProductForm({
               <FiLayers className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-lg">Product Variants</CardTitle>
+              <CardTitle className="text-lg">متغيرات المنتج</CardTitle>
               <CardDescription>
-                Add color variations with sizes and images
+                أضف النكهة والحجم والسعر والمخزون لكل خيار
               </CardDescription>
             </div>
           </div>

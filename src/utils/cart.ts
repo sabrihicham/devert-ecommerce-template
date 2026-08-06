@@ -19,7 +19,7 @@ export function validateCartItem(item: Partial<CartLineItem>): {
   if (!item.productId) errors.push("Product ID is required");
   if (!item.variantId) errors.push("Variant ID is required");
   if (!item.quantity || item.quantity <= 0) errors.push("Quantity must be greater than 0");
-  if (!item.size) errors.push("Size is required");
+  if (!item.flavor) errors.push("Variant option is required");
 
   return { valid: errors.length === 0, errors };
 }
@@ -28,7 +28,7 @@ export function mergeCartItems(items: CartLineItem[]): CartLineItem[] {
   const merged = new Map<string, CartLineItem>();
 
   items.forEach((item) => {
-    const key = `${item.variantId}-${item.size}`;
+    const key = `${item.variantId}`;
     const existing = merged.get(key);
 
     if (existing) {

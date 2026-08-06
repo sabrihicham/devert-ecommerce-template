@@ -27,13 +27,11 @@ function AdminShellContent({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuthMutation();
   const { locale, t } = useAdminLocale();
   const isRtl = locale === "ar";
-  const desktopOffset = isRtl ? "lg:pr-80 lg:pl-8" : "lg:pl-80 lg:pr-8";
-  const contentOffset = isRtl ? "lg:pr-72 lg:pl-0" : "lg:pl-72 lg:pr-0";
 
   return (
     <div className="admin-shell min-h-screen overflow-x-hidden bg-background text-foreground" dir={locale === "ar" ? "rtl" : "ltr"}>
       {/* Desktop sidebar */}
-      <aside className="admin-sidebar hidden lg:fixed lg:inset-y-0 lg:z-30 lg:flex lg:w-72 lg:flex-col border-r border-border bg-card/85">
+      <aside className="hidden border-e border-border bg-card/85 lg:fixed lg:inset-y-0 lg:start-0 lg:z-30 lg:flex lg:w-72 lg:flex-col">
         <div className="flex h-20 items-center gap-3 px-6 border-b border-border">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-black text-primary-foreground">S</span>
           <span className="font-semibold tracking-tight text-foreground">
@@ -57,7 +55,7 @@ function AdminShellContent({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Topbar */}
-      <header className={`sticky top-0 z-20 flex h-20 min-w-0 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-xl lg:px-8 ${desktopOffset}`}>
+      <header className="sticky top-0 z-20 flex h-20 min-w-0 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-xl lg:ps-80 lg:pe-8">
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetTrigger asChild>
             <button
@@ -124,7 +122,7 @@ function AdminShellContent({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Content */}
-      <main className={`min-w-0 ${contentOffset}`}>
+      <main className="min-w-0 lg:ps-72">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}
         </div>

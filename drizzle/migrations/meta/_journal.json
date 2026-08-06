@@ -85,6 +85,13 @@
       "when": 1775001610000,
       "tag": "0011_store_logo",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1786034633000,
+      "tag": "0012_supplements_product_model",
+      "breakpoints": true
     }
   ]
 }

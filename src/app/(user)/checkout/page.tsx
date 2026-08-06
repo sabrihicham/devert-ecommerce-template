@@ -83,7 +83,7 @@ async function CheckoutContent() {
                 className="flex items-center justify-between text-sm"
               >
                 <span className="text-color-secondary">
-                  {item.product.name} ({item.variant.color}, {item.size}) ×{" "}
+                  {item.product.name} ({item.variant.flavor} · {item.variant.quantity}{item.variant.quantityUnit}) ×{" "}
                   {item.quantity}
                 </span>
                 <span className="font-medium">

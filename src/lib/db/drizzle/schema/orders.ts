@@ -18,7 +18,6 @@ import {
 import { users } from "./users";
 import {
   productsVariants,
-  ProductSizeZod,
   selectProductSchema,
   selectVariantSchema,
 } from "./products";
@@ -160,7 +159,14 @@ export const orderProducts = pgTable(
     orderId: bigint("order_id", { mode: "number" }).notNull(),
     variantId: bigint("variant_id", { mode: "number" }).notNull(),
     quantity: integer("quantity").notNull(),
-    size: text("size").notNull(),
+    variantSnapshot: jsonb("variant_snapshot").notNull().$type<{
+      sku: string;
+      flavor: string;
+      form: string;
+      quantity: number;
+      quantityUnit: string;
+      price: number;
+    }>(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
@@ -242,7 +248,6 @@ export const insertCustomerInfoSchema = createInsertSchema(customerInfo, {
 });
 
 export const selectOrderProductSchema = createSelectSchema(orderProducts, {
-  size: ProductSizeZod,
   createdAt: z.coerce.string(),
   updatedAt: z.coerce.string(),
 });

@@ -77,8 +77,16 @@ const OrderProducts = async ({ id }: { id: string }) => {
           {
             id: variant.id,
             productId: variant.productId,
-            color: variant.color,
-            sizes: variant.sizes,
+            flavor: variant.flavor,
+            form: variant.form,
+            quantity: variant.quantity,
+            quantityUnit: variant.quantityUnit,
+            servings: variant.servings,
+            sku: variant.sku,
+            price: variant.price,
+            compareAtPrice: variant.compareAtPrice,
+            stock: variant.stock,
+            isActive: variant.isActive,
             images: variant.images,
             createdAt: variant.createdAt,
             updatedAt: variant.updatedAt,
@@ -89,7 +97,6 @@ const OrderProducts = async ({ id }: { id: string }) => {
       return {
         orderProductId: orderProduct.id,
         product: productWithVariants,
-        size: orderProduct.size,
         quantity: orderProduct.quantity,
       };
     },
@@ -103,11 +110,10 @@ const OrderProducts = async ({ id }: { id: string }) => {
         <div className="flex-1">
           <h2 className="mb-6 text-2xl font-bold">Order Items</h2>
           <GridProducts className="cart-ord-mobile">
-            {allProducts.map(({ orderProductId, product, size, quantity }) => (
+            {allProducts.map(({ orderProductId, product, quantity }) => (
               <OrderProduct
                 key={orderProductId}
                 product={product}
-                size={size}
                 quantity={quantity}
               />
             ))}

@@ -19,10 +19,19 @@ html:not([data-theme-ready]) body {
 }
 
 body {
-  font-family: var(--font-montserrat), var(--font-alexandria), sans-serif;
+  font-family: var(--font-montserrat), var(--font-cairo), sans-serif;
   color: hsl(var(--foreground));
   background: hsl(var(--background));
   transition: background-color 180ms ease, color 180ms ease;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 a {
@@ -115,8 +124,6 @@ html.dark { color-scheme: dark; }
 .admin-shell .text-violet-600 { color: hsl(var(--primary)); }
 .admin-shell .hover\:text-violet-400:hover { color: hsl(var(--primary)); }
 .admin-shell .bg-red-600.text-white { color: white; }
-.admin-sidebar { left: 0; }
-[dir="rtl"] .admin-sidebar { left: auto; right: 0; border-left-width: 1px; border-right-width: 0; }
 @media (max-width: 1023px) { .admin-shell { margin: 0 -48px -102px; } }
 @media (max-width: 640px) { .admin-shell { margin: 0 -24px -102px; } }
 

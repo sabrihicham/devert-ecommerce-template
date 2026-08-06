@@ -3,7 +3,6 @@ import type {
   CartItem,
   CartItemWithDetails,
   AddToCartInput,
-  ProductSize,
 } from "@/lib/db/drizzle/schema";
 
 export async function getCart(userId: string): Promise<CartItem[]> {
@@ -78,10 +77,9 @@ export async function clearCart(userId: string): Promise<boolean> {
 export async function findCartItem(
   userId: string,
   variantId: number,
-  size: ProductSize,
 ): Promise<CartItem | null> {
   try {
-    return await cartRepository.findOne(userId, variantId, size);
+    return await cartRepository.findOne(userId, variantId);
   } catch (error) {
     console.error("Error finding cart item:", error);
     return null;

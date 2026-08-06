@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ProductForm } from "./ProductForm";
 import { revalidateProducts } from "@/app/actions";
-import type { ProductWithVariants, ProductSize } from "@/lib/db/drizzle/schema";
+import type { ProductWithVariants } from "@/lib/db/drizzle/schema";
 import type { ProductFormData } from "@/types/admin";
 import type { CategoryOption } from "./BasicInfo";
 
@@ -18,15 +18,29 @@ function mapProductToFormData(product: ProductWithVariants): ProductFormData {
     basicInfo: {
       name: product.name,
       description: product.description,
+      brand: product.brand,
+      ingredients: product.ingredients,
+      usage: product.usage,
+      warnings: product.warnings,
+      tags: product.tags,
       price: product.price,
+      compareAtPrice: product.compareAtPrice,
       category: product.category,
       isFeatured: product.isFeatured,
     },
     mainImageUrl: product.img,
     variants: product.variants.map((variant) => ({
       id: variant.id,
-      color: variant.color,
-      sizes: variant.sizes as ProductSize[],
+      flavor: variant.flavor,
+      form: variant.form,
+      quantity: variant.quantity,
+      quantityUnit: variant.quantityUnit,
+      servings: variant.servings,
+      sku: variant.sku,
+      price: variant.price,
+      compareAtPrice: variant.compareAtPrice ?? null,
+      stock: variant.stock,
+      isActive: variant.isActive,
       images: variant.images,
     })),
   };

@@ -18,9 +18,9 @@ export function transformOrderToViewModel(
       productId: 0,
       variantId: p.variantId,
       quantity: p.quantity,
-      size: p.size,
+      variantSnapshot: p.variantSnapshot,
       price: 0,
-      color: "",
+      flavor: p.variantSnapshot.flavor,
     })),
     customer: {
       name: customerInfo.name,

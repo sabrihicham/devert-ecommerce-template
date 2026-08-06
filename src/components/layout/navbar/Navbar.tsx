@@ -3,7 +3,6 @@
 /** COMPONENTS */
 import Link from "next/link";
 import Image from "next/image";
-import { LinksDesktop } from "./LinksDesktop";
 import { UserMenu } from "./UserMenu";
 import { SearchInput } from "./SearchInput";
 import {
@@ -25,24 +24,16 @@ import dynamic from "next/dynamic";
 import { useAuthMutation } from "@/hooks/auth/useAuthMutation";
 /** ICONS */
 import { Menu, User, ReceiptText, LogOut } from "lucide-react";
-import type { Collection } from "@/lib/db/drizzle/schema";
 
 const EditProfile = dynamic(() => import("./EditProfile"), {
   ssr: false,
 });
 
-export const Navbar = ({ categories, storeName, logoUrl }: { categories: Collection[]; storeName: string; logoUrl: string | null }) => {
+export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: string | null }) => {
   const { data: session, isPending } = useSession();
 
   const editProfileManager = useManager();
   const { signOut } = useAuthMutation();
-
-  const linksData = categories
-    .filter((category) => category.isVisible)
-    .map((category) => ({
-      ...category,
-      path: `/${category.slug}`,
-    }));
 
   return (
     <>
@@ -66,33 +57,6 @@ export const Navbar = ({ categories, storeName, logoUrl }: { categories: Collect
               {/* Navigation Links */}
               <nav className="flex-1 overflow-y-auto">
                 <ul className="flex flex-col gap-2 p-4">
-                  {/* Category Links */}
-                  {linksData.map((link) => (
-                    <li key={link.id}>
-                      <SheetClose asChild>
-                        <Link
-                          href={link.path}
-                          className="group relative flex min-h-16 items-center gap-3 overflow-hidden rounded-xl border border-border/70 bg-muted/50 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-muted"
-                        >
-                          {link.imageUrl && (
-                            <span
-                              className="size-11 shrink-0 rounded-lg bg-cover bg-center"
-                              style={{ backgroundImage: `url(${link.imageUrl})` }}
-                              aria-hidden="true"
-                            />
-                          )}
-                          <span className="min-w-0">
-                            <span className="block text-sm font-bold">{link.name}</span>
-                            <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                              {link.description || "اكتشف التشكيلة"}
-                            </span>
-                          </span>
-                          <span className="ms-auto text-primary transition-transform group-hover:-translate-x-1">←</span>
-                        </Link>
-                      </SheetClose>
-                    </li>
-                  ))}
-
                   {/* Separator */}
                   {(session?.user || isPending) && (
                     <Separator className="my-2" />
@@ -207,9 +171,6 @@ export const Navbar = ({ categories, storeName, logoUrl }: { categories: Collect
               </Link>
             </li>
           )}
-          <li>
-            <LinksDesktop categories={categories} />
-          </li>
         </ul>
 
         {/* Search Input */}

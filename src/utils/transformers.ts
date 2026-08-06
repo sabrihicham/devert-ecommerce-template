@@ -14,7 +14,7 @@ export function transformCartItemToOrderProduct(
     orderId: orderId,
     variantId: cartItem.variantId,
     quantity: cartItem.quantity,
-    size: cartItem.size,
+    variantSnapshot: { sku: "", flavor: "", form: "other", quantity: 1, quantityUnit: "piece", price: 0 },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -34,11 +34,9 @@ export function transformProductPrice(
 
 export function transformVariantSelectOptions(variant: ProductVariant) {
   return {
-    color: variant.color,
-    sizes: variant.sizes.map((size) => ({
-      value: size,
-      label: size,
-    })),
+    flavor: variant.flavor,
+    quantity: variant.quantity,
+    quantityUnit: variant.quantityUnit,
     images: variant.images,
   };
 }

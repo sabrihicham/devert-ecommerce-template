@@ -16,9 +16,9 @@ export interface OrderLineItem {
   productId: number;
   variantId: number;
   quantity: number;
-  size: string;
+  variantSnapshot: { flavor: string; form: string; quantity: number; quantityUnit: string; sku: string; price: number };
   price: number;
-  color: string;
+  flavor: string;
 }
 
 export interface CustomerDetails {
@@ -49,10 +49,9 @@ export interface CartLineItem {
   productId: number;
   variantId: number;
   quantity: number;
-  size: string;
   price: number;
   name: string;
-  color: string;
+  flavor: string;
 }
 
 export interface DomainProduct {
@@ -67,7 +66,9 @@ export interface DomainProduct {
 
 export interface DomainProductVariant {
   id: number;
-  color: string;
-  sizes: string[];
+  flavor: string;
+  form: string;
+  quantity: number;
+  quantityUnit: string;
   images: string[];
 }

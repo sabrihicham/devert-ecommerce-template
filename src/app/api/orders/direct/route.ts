@@ -19,11 +19,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const { variantId, size, orderRef, name, email, phone, line1, line2, city, wilaya } =
+    const { variantId, orderRef, name, email, phone, line1, line2, city, wilaya } =
       parsed.data;
     const variant = await getVariantWithProduct(variantId);
 
-    if (!variant || !variant.sizes.includes(size)) {
+    if (!variant || !variant.isActive || variant.stock < 1) {
       return NextResponse.json(
         { error: "This product option is no longer available" },
         { status: 400 },
@@ -42,9 +42,9 @@ export async function POST(request: Request) {
         phone,
         address: { line1, line2, city, wilaya, country: "Algeria" },
         orderRef,
-        totalPrice: Math.round(variant.product.price * 100),
+        totalPrice: Math.round(variant.price * 100),
       },
-      [{ variantId: variant.id, size, quantity: 1 }],
+      [{ variantId: variant.id, quantity: 1, variantSnapshot: { sku: variant.sku, flavor: variant.flavor, form: variant.form, quantity: variant.quantity, quantityUnit: variant.quantityUnit, price: variant.price } }],
     );
 
     if (!order) {

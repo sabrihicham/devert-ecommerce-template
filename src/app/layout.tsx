@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Alexandria, Montserrat } from "next/font/google";
+import { Cairo, Montserrat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
@@ -19,9 +19,9 @@ const montserrat = Montserrat({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const alexandria = Alexandria({
+const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  variable: "--font-alexandria",
+  variable: "--font-cairo",
   display: "swap",
   weight: ["400", "500", "600", "700", "800"],
 });
@@ -63,7 +63,7 @@ export default async function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
-      <body className={`${montserrat.variable} ${alexandria.variable}`}>
+      <body className={`${montserrat.variable} ${cairo.variable}`}>
         <Script id="restore-store-brand" strategy="beforeInteractive">{`
             try {
               var theme = localStorage.getItem("theme");

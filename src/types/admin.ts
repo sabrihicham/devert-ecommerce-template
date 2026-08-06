@@ -1,63 +1,10 @@
-import type {
-  Product,
-  ProductVariant,
-  ProductWithVariants,
-  Banner,
-  Collection,
-} from "@/lib/db/drizzle/schema";
-
-// Derived from Product schema
-export type BasicInfoData = Pick<
-  Product,
-  "name" | "description" | "price" | "category" | "isFeatured"
->;
-
-// Derived from ProductVariant - form state representation
-export type VariantFormData = Pick<
-  ProductVariant,
-  "color" | "sizes" | "images"
-> & {
-  id?: ProductVariant["id"];
-};
-
-// Variant data for form submission (snake_case for API, includes UI state)
-export interface VariantSubmitData {
-  id?: ProductVariant["id"];
-  color: ProductVariant["color"];
-  sizes: ProductVariant["sizes"];
-  imageCount: number;
-  existingImages: string[];
-  removedImages: string[];
-}
-
-export interface ProductFormData {
-  id?: Product["id"];
-  basicInfo: BasicInfoData;
-  mainImageUrl?: Product["img"];
-  variants: VariantFormData[];
-}
-
-export interface ProductApiResponse {
-  success: boolean;
-  message: string;
-  errors?: Record<string, string[]>;
-  data?: ProductWithVariants;
-}
-
-// Alias for clarity in API routes
+import type { Product, ProductVariant, ProductWithVariants, Banner, Collection, SupplementForm, QuantityUnit } from "@/lib/db/drizzle/schema";
+export type BasicInfoData = Pick<Product, "name" | "description" | "brand" | "ingredients" | "usage" | "warnings" | "tags" | "price" | "compareAtPrice" | "category" | "isFeatured">;
+export type VariantFormData = Pick<ProductVariant, "flavor" | "form" | "quantity" | "quantityUnit" | "servings" | "sku" | "price" | "compareAtPrice" | "stock" | "images" | "isActive"> & { id?: number };
+export interface VariantSubmitData extends Omit<VariantFormData, "images"> { id?: number; imageCount: number; existingImages: string[]; removedImages: string[]; }
+export interface ProductFormData { id?: number; basicInfo: BasicInfoData; mainImageUrl?: string; variants: VariantFormData[]; }
+export interface ProductApiResponse { success: boolean; message: string; errors?: Record<string, string[]>; data?: ProductWithVariants; }
 export type VariantApiData = VariantSubmitData;
-
-export interface BannerApiResponse {
-  success: boolean;
-  message: string;
-  errors?: Record<string, string[]>;
-  data?: Banner;
-}
-
-export interface CollectionApiResponse {
-  success: boolean;
-  message: string;
-  errors?: Record<string, string[]>;
-  data?: Collection;
-}
-
+export interface BannerApiResponse { success: boolean; message: string; errors?: Record<string, string[]>; data?: Banner; }
+export interface CollectionApiResponse { success: boolean; message: string; errors?: Record<string, string[]>; data?: Collection; }
+export type { SupplementForm, QuantityUnit };

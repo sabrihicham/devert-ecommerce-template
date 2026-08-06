@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 
 import { getProduct } from "@/app/actions";
 import type { ProductVariant } from "@/lib/db/drizzle/schema";
-import { formatPriceFromEuros } from "@/utils/formatters";
 
 import { AddToCart, MobileAddToCart } from "../cart/AddToCart";
 
@@ -13,7 +12,7 @@ import { ProductInfo } from "./ProductInfo";
 interface SingleProductProps {
   id: number;
   category: string;
-  selectedVariantColor?: ProductVariant["color"];
+  selectedVariantColor?: ProductVariant["flavor"];
 }
 
 export const SingleProduct = async ({
@@ -40,12 +39,12 @@ export const SingleProduct = async ({
   }
 
   const selectedVariant = product.variants.find(
-    (variant) => variant.color === selectedVariantColor,
+    (variant) => variant.flavor === selectedVariantColor || String(variant.id) === selectedVariantColor,
   );
 
   if (!selectedVariant) {
     redirect(
-      `/${product.category}/${id}?variant=${encodeURIComponent(product.variants[0].color)}`,
+      `/${product.category}/${id}?variant=${encodeURIComponent(product.variants[0].flavor)}`,
     );
   }
 
@@ -65,7 +64,7 @@ export const SingleProduct = async ({
                   <EditProductButton productId={product.id} />
                 </div>
                 <span className="text-base font-medium">
-                  {formatPriceFromEuros(product.price)}
+                  {selectedVariant.price.toLocaleString("ar-DZ")} دج
                 </span>
                 <p className="line-clamp-5 break-all text-sm text-color-secondary">
                   {product.description}
@@ -75,13 +74,13 @@ export const SingleProduct = async ({
               <AddToCart product={product} selectedVariant={selectedVariant} />
             </div>
 
-            <ProductInfo />
+            <ProductInfo product={product} />
           </div>
         </div>
       </div>
 
       <div className="mt-6 px-2 xs:px-4 sm:px-6 md:px-8 lg:hidden">
-        <ProductInfo />
+        <ProductInfo product={product} />
       </div>
 
       <div className="safe-area-bottom fixed bottom-0 left-0 right-0 z-50 border-t border-border-primary bg-background-primary lg:hidden">
@@ -92,7 +91,7 @@ export const SingleProduct = async ({
                 {product.name}
               </h2>
               <span className="text-sm font-medium">
-                {formatPriceFromEuros(product.price)}
+                {selectedVariant.price.toLocaleString("ar-DZ")} دج
               </span>
             </div>
           </div>

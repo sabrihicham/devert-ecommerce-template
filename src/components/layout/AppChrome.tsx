@@ -12,7 +12,7 @@ export function AppChrome({ categories, children, storeName, logoUrl }: { catego
 
   return (
     <>
-      <Navbar categories={categories} storeName={storeName} logoUrl={logoUrl} />
+      <Navbar storeName={storeName} logoUrl={logoUrl} />
       {children}
       <Footer categories={categories} storeName={storeName} logoUrl={logoUrl} />
     </>

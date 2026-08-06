@@ -43,14 +43,14 @@ function formatOrderEmail(orderDetails: OrderDetails): string {
   const deliveryDate = formatOrderDate(orderDetails.deliveryDate);
 
   const productsHtml = orderDetails.orderProducts
-    .map(({ quantity, size, variant }) => {
-      const unitPrice = variant.product.price;
+    .map(({ quantity, variant }) => {
+      const unitPrice = variant.price;
 
       return `
         <tr>
           <td style="padding: 10px; border-bottom: 1px solid #eee;">
             <strong>${escapeHtml(variant.product.name)}</strong><br/>
-            <small>Color: ${escapeHtml(variant.color)} | Size: ${escapeHtml(size)}</small>
+          <small>الخيار: ${escapeHtml(variant.flavor)} ${variant.quantity}${escapeHtml(variant.quantityUnit)}</small>
           </td>
           <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">
             ${quantity}
@@ -129,8 +129,8 @@ function formatOwnerEmail(orderDetails: OrderDetails): string {
 
   const productsDetails = orderDetails.orderProducts
     .map(
-      ({ quantity, size, variant }) =>
-        `- ${escapeHtml(variant.product.name)} (${escapeHtml(variant.color)}, Size: ${escapeHtml(size)}) x${quantity}`,
+      ({ quantity, variant }) =>
+        `- ${escapeHtml(variant.product.name)} (${escapeHtml(variant.flavor)} ${variant.quantity}${escapeHtml(variant.quantityUnit)}) x${quantity}`,
     )
     .join("<br />");
 

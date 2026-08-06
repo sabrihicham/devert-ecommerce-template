@@ -14,9 +14,10 @@ interface ProductItemProps {
 }
 
 export const ProductItem = ({ product }: ProductItemProps) => {
-  const { name, id, img, price, compareAtPrice, stock = 0, category, variants, isNewArrival } = product;
+  const { name, id, img, price, compareAtPrice, category, variants, isNewArrival } = product;
 
-  const productLink = `/${category}/${id}?variant=${encodeURIComponent(variants[0]?.color ?? "")}`;
+  const productLink = `/${category}/${id}?variant=${encodeURIComponent(variants[0]?.flavor ?? "")}`;
+  const availableStock = variants.reduce((total, variant) => total + (variant.isActive ? variant.stock : 0), 0);
 
   return (
     <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition duration-300 hover:-translate-y-1 hover:shadow-md focus-within:ring-2 focus-within:ring-ring">
@@ -52,15 +53,15 @@ export const ProductItem = ({ product }: ProductItemProps) => {
           {variants.slice(0, 4).map((variant) => (
             <span
               key={variant.id}
-              title={variant.color}
+              title={`${variant.flavor} ${variant.quantity}${variant.quantityUnit}`}
               className="h-2 w-2 rounded-full border border-white/30 bg-color-secondary"
-              style={{ backgroundColor: safeColor(variant.color) }}
+              style={{ backgroundColor: safeColor(variant.flavor) }}
             />
           ))}
           {variants.length > 4 && (
             <span className="text-[11px] text-muted-foreground">+{variants.length - 4}</span>
           )}
-          {stock <= 0 ? <span className="inline-flex items-center gap-1 text-xs text-destructive"><PackageX className="size-3"/>نفد</span> : <Link href={productLink} className="ms-auto inline-flex items-center text-xs font-semibold text-primary">عرض <ArrowLeft className="ms-1 size-3"/></Link>}
+          {availableStock <= 0 ? <span className="inline-flex items-center gap-1 text-xs text-destructive"><PackageX className="size-3"/>نفد</span> : <Link href={productLink} className="ms-auto inline-flex items-center text-xs font-semibold text-primary">عرض <ArrowLeft className="ms-1 size-3"/></Link>}
         </div>
       </div>
     </article>

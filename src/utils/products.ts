@@ -30,7 +30,7 @@ export function sortProductsByPrice(
 }
 
 export function getAvailableSizes(variant: ProductVariant): string[] {
-  return variant.sizes;
+  return [`${variant.quantity}${variant.quantityUnit}`];
 }
 
 // TODO: Implement with real ratings data

@@ -27,11 +27,13 @@ export {
 
 // Products
 export {
-  sizesEnum,
   productStatusEnum,
+  supplementFormEnum,
+  quantityUnitEnum,
   ProductStatusZod,
   ProductCategoryZod,
-  ProductSizeZod,
+  SupplementFormZod,
+  QuantityUnitZod,
   productsItems,
   productsVariants,
   selectProductSchema,
@@ -51,7 +53,8 @@ export {
   type VariantWithProduct,
   type CreateProductWithVariants,
   type ProductCategory,
-  type ProductSize,
+  type SupplementForm,
+  type QuantityUnit,
 } from "./products";
 
 // Cart

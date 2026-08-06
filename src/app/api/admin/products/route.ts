@@ -6,7 +6,8 @@ import { productsRepository } from "@/lib/db/drizzle/repositories";
 import {
   type InsertProductVariant,
   ProductCategoryZod,
-  ProductSizeZod,
+  SupplementFormZod,
+  QuantityUnitZod,
 } from "@/lib/db/drizzle/schema";
 import { createServiceClient } from "@/lib/db/supabase/server";
 import { verifyAdmin } from "@/utils/admin";
@@ -26,15 +27,29 @@ const productIdSchema = z.coerce.number().int().positive();
 const productFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   description: z.string().trim().min(1, "Description is required"),
+  brand: z.string().trim().min(1, "Brand is required"),
+  ingredients: z.string().default(""),
+  usage: z.string().default(""),
+  warnings: z.string().default(""),
+  tags: z.array(z.string()).default([]),
   price: z.coerce.number().positive("Price must be greater than 0"),
+  compareAtPrice: z.coerce.number().positive().nullable().optional(),
   category: ProductCategoryZod,
   isFeatured: z.boolean().default(false),
 });
 
 const variantFormSchema = z.object({
   id: z.number().int().positive().optional(),
-  color: z.string().trim().min(1, "Color is required"),
-  sizes: z.array(ProductSizeZod).min(1, "At least one size is required"),
+  flavor: z.string().trim().min(1, "Flavor is required"),
+  form: SupplementFormZod,
+  quantity: z.coerce.number().positive(),
+  quantityUnit: QuantityUnitZod,
+  servings: z.coerce.number().int().positive().nullable().optional(),
+  sku: z.string().trim().min(1, "SKU is required"),
+  price: z.coerce.number().positive(),
+  compareAtPrice: z.coerce.number().positive().nullable().optional(),
+  stock: z.coerce.number().int().nonnegative(),
+  isActive: z.boolean().default(true),
   imageCount: z.number().int().nonnegative().optional(),
   existingImages: z.array(z.string()).optional(),
   removedImages: z.array(z.string()).optional(),
@@ -85,8 +100,23 @@ function parseVariantsData(rawVariants: FormDataEntryValue | null): VariantFormI
     .parse(parsedVariants);
 }
 
+async function assertUniqueSkus(variants: VariantFormInput[], productId?: number) {
+  const seen = new Set<string>();
+  for (const variant of variants) {
+    if (seen.has(variant.sku)) throw new z.ZodError([{ code: "custom", message: "SKU مكرر داخل المتغيرات", path: ["variants"] }]);
+    seen.add(variant.sku);
+    const existing = await productsRepository.findVariantBySku(variant.sku);
+    if (existing && existing.productId !== productId) throw new z.ZodError([{ code: "custom", message: `SKU مستخدم مسبقًا: ${variant.sku}`, path: ["variants"] }]);
+  }
+}
+
 function normalizeColorPath(color: string) {
-  return color.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  return color.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "variant";
+}
+
+function parseTags(raw: FormDataEntryValue | null): string[] {
+  if (typeof raw !== "string" || !raw) return [];
+  try { const value = JSON.parse(raw); return z.array(z.string()).parse(value); } catch { return raw.split(",").map((tag) => tag.trim()).filter(Boolean); }
 }
 
 async function uploadImage(file: File, path: string): Promise<string | null> {
@@ -209,7 +239,7 @@ async function buildVariants({
     variantsData.map(async (variant, idx) => {
       const existingImages = variant.existingImages ?? [];
       const newImages: string[] = [];
-      const colorPath = normalizeColorPath(variant.color);
+      const colorPath = normalizeColorPath(variant.sku);
 
       for (let i = 0; i < (variant.imageCount ?? 0); i++) {
         const file = formData.get(`variant_${idx}_image_${i}`);
@@ -220,7 +250,7 @@ async function buildVariants({
           );
           if (!url) {
             throw new Error(
-              `Error uploading image ${i + 1} for variant ${variant.color}`,
+              `Error uploading image ${i + 1} for variant ${variant.flavor}`,
             );
           }
           newImages.push(url);
@@ -231,13 +261,21 @@ async function buildVariants({
       const images = variant.id ? [...existingImages, ...newImages] : newImages;
 
       if (images.length === 0) {
-        throw new Error(`Variant ${variant.color} must include at least one image`);
+        throw new Error(`Variant ${variant.flavor} must include at least one image`);
       }
 
       return {
         id: variant.id,
-        color: variant.color,
-        sizes: variant.sizes,
+        flavor: variant.flavor,
+        form: variant.form,
+        quantity: variant.quantity,
+        quantityUnit: variant.quantityUnit,
+        servings: variant.servings ?? null,
+        sku: variant.sku,
+        price: variant.price,
+        compareAtPrice: variant.compareAtPrice ?? null,
+        stock: variant.stock,
+        isActive: variant.isActive,
         images,
       };
     }),
@@ -260,11 +298,18 @@ export async function POST(request: NextRequest) {
     const productData = productFormSchema.parse({
       name: formData.get("name"),
       description: formData.get("description"),
+      brand: formData.get("brand"),
+      ingredients: formData.get("ingredients") ?? "",
+      usage: formData.get("usage") ?? "",
+      warnings: formData.get("warnings") ?? "",
+      tags: parseTags(formData.get("tags")),
       price: formData.get("price"),
+      compareAtPrice: formData.get("compareAtPrice") || null,
       category: formData.get("category"),
       isFeatured: formData.get("isFeatured") === "true",
     });
     const variantsData = parseVariantsData(formData.get("variants"));
+    await assertUniqueSkus(variantsData);
     const mainImageEntry = formData.get("mainImage");
 
     if (!(mainImageEntry instanceof File) || mainImageEntry.size === 0) {
@@ -365,11 +410,18 @@ export async function PUT(request: NextRequest) {
     const productData = productFormSchema.parse({
       name: formData.get("name"),
       description: formData.get("description"),
+      brand: formData.get("brand"),
+      ingredients: formData.get("ingredients") ?? "",
+      usage: formData.get("usage") ?? "",
+      warnings: formData.get("warnings") ?? "",
+      tags: parseTags(formData.get("tags")),
       price: formData.get("price"),
+      compareAtPrice: formData.get("compareAtPrice") || null,
       category: formData.get("category"),
       isFeatured: formData.get("isFeatured") === "true",
     });
     const variantsData = parseVariantsData(formData.get("variants"));
+    await assertUniqueSkus(variantsData, id);
     const mainImageEntry = formData.get("mainImage");
     const existingMainImageEntry = formData.get("existingMainImage");
     const existingMainImage =

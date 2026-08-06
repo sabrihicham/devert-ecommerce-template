@@ -247,12 +247,20 @@ export const ordersRepository = {
             totalPrice: customerData.totalPrice,
           });
 
+          for (const product of products) {
+            const [updatedVariant] = await tx.update(productsVariants)
+              .set({ stock: sql`${productsVariants.stock} - ${product.quantity}` })
+              .where(and(eq(productsVariants.id, product.variantId), sql`${productsVariants.isActive} = true`, sql`${productsVariants.stock} >= ${product.quantity}`))
+              .returning({ id: productsVariants.id });
+            if (!updatedVariant) throw new Error("Variant is unavailable or out of stock");
+          }
+
           await tx.insert(orderProducts).values(
             products.map((product) => ({
               orderId: newOrder.id,
               variantId: product.variantId,
               quantity: product.quantity,
-              size: product.size,
+              variantSnapshot: product.variantSnapshot,
             })),
           );
 
@@ -325,7 +333,7 @@ function transformOrderWithDetails(row: {
     orderId: number;
     variantId: number;
     quantity: number;
-    size: string;
+    variantSnapshot: { sku: string; flavor: string; form: string; quantity: number; quantityUnit: string; price: number };
     createdAt: Date | null;
     updatedAt: Date | null;
     variant: typeof productsVariants.$inferSelect & {
@@ -375,14 +383,22 @@ function transformOrderWithDetails(row: {
       orderId: op.orderId,
       variantId: op.variantId,
       quantity: op.quantity,
-      size: op.size as "XS" | "S" | "M" | "L" | "XL" | "XXL",
+      variantSnapshot: op.variantSnapshot,
       createdAt: op.createdAt?.toISOString() ?? new Date().toISOString(),
       updatedAt: op.updatedAt?.toISOString() ?? new Date().toISOString(),
       variant: {
         id: op.variant.id,
         productId: op.variant.productId,
-        color: op.variant.color,
-        sizes: op.variant.sizes,
+        flavor: op.variant.flavor,
+        form: op.variant.form,
+        quantity: Number(op.variant.quantity),
+        quantityUnit: op.variant.quantityUnit,
+        servings: op.variant.servings,
+        sku: op.variant.sku,
+        price: Number(op.variant.price),
+        compareAtPrice: op.variant.compareAtPrice == null ? null : Number(op.variant.compareAtPrice),
+        stock: op.variant.stock,
+        isActive: op.variant.isActive,
         images: op.variant.images,
         createdAt:
           op.variant.createdAt?.toISOString() ?? new Date().toISOString(),
@@ -392,10 +408,21 @@ function transformOrderWithDetails(row: {
           id: op.variant.product.id,
           name: op.variant.product.name,
           description: op.variant.product.description,
+          brand: op.variant.product.brand,
+          ingredients: op.variant.product.ingredients,
+          usage: op.variant.product.usage,
+          warnings: op.variant.product.warnings,
+          tags: op.variant.product.tags,
           price: Number(op.variant.product.price),
+          compareAtPrice: op.variant.product.compareAtPrice == null ? null : Number(op.variant.product.compareAtPrice),
+          stock: op.variant.product.stock,
           category: op.variant.product.category,
           img: op.variant.product.img,
           isFeatured: op.variant.product.isFeatured,
+          isBestSeller: op.variant.product.isBestSeller,
+          isNewArrival: op.variant.product.isNewArrival,
+          status: op.variant.product.status,
+          publishedAt: op.variant.product.publishedAt?.toISOString() ?? null,
           createdAt:
             op.variant.product.createdAt?.toISOString() ??
             new Date().toISOString(),

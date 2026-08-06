@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
     const totalPrice = Math.round(
       selectedItems.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
+        (sum, item) => sum + item.variant.price * item.quantity,
         0,
       ) * 100,
     );
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       selectedItems.map((item) => ({
         variantId: item.variantId,
         quantity: item.quantity,
-        size: item.size,
+        variantSnapshot: { sku: item.variant.sku, flavor: item.variant.flavor, form: item.variant.form, quantity: item.variant.quantity, quantityUnit: item.variant.quantityUnit, price: item.variant.price },
       })),
     );
 

@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { ALGERIAN_WILAYAS } from "@/constants/wilayas";
 import { DirectOrderSchema } from "@/schemas/direct-order";
-import type { ProductSize } from "@/lib/db/drizzle/schema";
 
 interface Commune {
   wilayaCode: string;
@@ -28,7 +27,6 @@ interface Commune {
 
 interface DirectCheckoutFormProps {
   variantId: number;
-  size: ProductSize;
   defaultName?: string;
   defaultEmail?: string;
 }
@@ -54,7 +52,6 @@ function parseCommunes(text: string): Commune[] {
 
 export function DirectCheckoutForm({
   variantId,
-  size,
   defaultName = "",
   defaultEmail = "",
 }: DirectCheckoutFormProps) {
@@ -85,7 +82,6 @@ export function DirectCheckoutForm({
     mutationFn: async () => {
       const parsed = DirectOrderSchema.safeParse({
         variantId,
-        size,
         orderRef: orderRef.current,
         name: nameRef.current.value,
         email: emailRef.current.value,

@@ -11,7 +11,7 @@ export function searchProducts(
   }
 
   const fuse = new Fuse(products, {
-    keys: ["name", "description", "category", "variants.color"],
+    keys: ["name", "description", "brand", "ingredients", "category", "variants.flavor", "variants.sku"],
     threshold: 0.3,
     includeScore: true,
     minMatchCharLength: 1,

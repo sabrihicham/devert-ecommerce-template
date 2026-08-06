@@ -6,6 +6,19 @@ import { getStoreSettings, updateStoreSettings } from "@/services/settings.servi
 import { updateStoreSettingsSchema } from "@/lib/db/drizzle/schema";
 import { createServiceClient } from "@/lib/db/supabase/server";
 
+/**
+ * FormData values are always strings (apart from uploaded files), while the
+ * settings schema intentionally stores these fields as integers. Keep an
+ * invalid value as-is so Zod can return the normal field validation error.
+ */
+function parseNullableInteger(value: FormDataEntryValue | null) {
+  if (value === null || value === "") return null;
+  if (value instanceof File) return value;
+
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : value;
+}
+
 export async function GET(request: NextRequest) {
   const admin = await verifyAdmin(request);
   if (!admin) {
@@ -37,7 +50,13 @@ export async function PUT(request: NextRequest) {
     if (error) return NextResponse.json({ error: "Unable to upload logo" }, { status: 500 });
     logoUrl = client.storage.from("product-images").getPublicUrl(path).data.publicUrl;
   }
-  const body = { ...Object.fromEntries(formData.entries()), logoUrl, bannerActive: formData.get("bannerActive") === "true" };
+  const body = {
+    ...Object.fromEntries(formData.entries()),
+    logoUrl,
+    bannerActive: formData.get("bannerActive") === "true",
+    minOrderAmountCents: parseNullableInteger(formData.get("minOrderAmountCents")),
+    maxPendingOrdersPerPhone: parseNullableInteger(formData.get("maxPendingOrdersPerPhone")),
+  };
   const parsedBody = updateStoreSettingsSchema.safeParse(body);
   if (!parsedBody.success) {
     return NextResponse.json(

@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   cartItemWithDetailsSchema,
   type CartItem,
-  type ProductSize,
   selectCartItemSchema,
 } from "@/lib/db/drizzle/schema";
 import { useSession } from "@/lib/auth/client";
@@ -18,15 +17,14 @@ export const useCartMutation = () => {
   const add = useMutation({
     mutationFn: async (params: {
       variantId: number;
-      size: ProductSize;
       quantity?: number;
     }) => {
-      const { variantId, size, quantity = 1 } = params;
+      const { variantId, quantity = 1 } = params;
 
       const response = await fetch("/api/user/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId, size, quantity }),
+        body: JSON.stringify({ variantId, quantity }),
       });
 
       if (!response.ok) {
@@ -40,7 +38,6 @@ export const useCartMutation = () => {
     },
     onMutate: async (params: {
       variantId: number;
-      size: ProductSize;
       quantity?: number;
     }) => {
       if (!userId) {
@@ -48,7 +45,7 @@ export const useCartMutation = () => {
         throw new Error("Unauthorized");
       }
 
-      const { variantId, size, quantity = 1 } = params;
+      const { variantId, quantity = 1 } = params;
 
       await queryClient.cancelQueries({
         queryKey: CART_QUERY_KEYS.cartList(userId),
@@ -62,7 +59,6 @@ export const useCartMutation = () => {
         id: -Math.floor(Math.random() * 1e9),
         userId: "temp",
         variantId,
-        size,
         quantity,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -72,7 +68,7 @@ export const useCartMutation = () => {
         CART_QUERY_KEYS.cartList(userId),
         (old = { items: [] }) => {
           const idx = old.items.findIndex(
-            (i) => i.variantId === variantId && i.size === size,
+            (i) => i.variantId === variantId,
           );
           if (idx >= 0) {
             const next = [...old.items];
@@ -104,7 +100,7 @@ export const useCartMutation = () => {
         (old = { items: [] }) => {
           const filtered = old.items.filter((i) => i.id !== tempItem.id);
           const idx = filtered.findIndex(
-            (i) => i.variantId === data.variantId && i.size === data.size,
+            (i) => i.variantId === data.variantId,
           );
           if (idx >= 0) {
             filtered[idx] = data;

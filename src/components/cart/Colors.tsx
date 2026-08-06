@@ -1,7 +1,6 @@
 "use client";
 
 /** FUNCTIONALITY */
-import { getColorSwatchStyle } from "@/constants/colors";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 /** TYPES */
@@ -12,7 +11,7 @@ import type {
 
 interface ColorsProps {
   variants: ProductWithVariants["variants"];
-  selectedVariantColor?: ProductVariant["color"];
+  selectedVariantColor?: ProductVariant["flavor"];
   compact?: boolean;
 }
 
@@ -24,7 +23,7 @@ export function Colors({
   const router = useRouter();
 
   const handleColorChange = (variant: ProductVariant) => {
-    router.replace(`?variant=${variant.color}`);
+    router.replace(`?variant=${variant.id}`);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -43,19 +42,19 @@ export function Colors({
           className={cn(
             "border border-solid border-border-primary flex justify-center relative rounded transition duration-150 ease hover:border-border-secondary",
             {
-              "border-border-secondary": selectedVariantColor === v.color,
+              "border-border-secondary": selectedVariantColor === v.flavor,
               "w-8 h-8": !compact,
               "w-6 h-6": compact,
             },
           )}
-          style={getColorSwatchStyle(v.color)}
+          aria-label={`${v.flavor} ${v.quantity}${v.quantityUnit}`}
           onClick={() => handleColorChange(v)}
-          title={`Color ${v.color}`}
+          title={`${v.flavor} ${v.quantity}${v.quantityUnit}`}
         >
           <span
             className={cn({
               "w-2.5 absolute bottom-selected h-px bg-white":
-                selectedVariantColor === v.color,
+                selectedVariantColor === v.flavor,
             })}
           />
         </button>

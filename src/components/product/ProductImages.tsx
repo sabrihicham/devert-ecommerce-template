@@ -49,7 +49,7 @@ export const ProductImages = async ({
                   <ProductImage
                     image={image}
                     blurDataURL={blurDataURLs[index]}
-                    name={`${name} ${selectedVariant.color} - Image ${
+                    name={`${name} ${selectedVariant.flavor} - Image ${
                       index + 1
                     }`}
                     width={1200}
@@ -73,7 +73,7 @@ export const ProductImages = async ({
             <ProductImage
               image={image}
               blurDataURL={blurDataURLs[index]}
-              name={`${name} ${selectedVariant.color} - Image ${index + 1}`}
+              name={`${name} ${selectedVariant.flavor} - Image ${index + 1}`}
               width={1200}
               height={1800}
               priority={index < 2}

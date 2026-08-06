@@ -85,12 +85,14 @@ export const updateStoreSettingsSchema = z
       .optional(),
     bannerActive: z.boolean(),
     minOrderAmountCents: z
+      .coerce
       .number()
       .int()
       .nonnegative("Minimum order amount cannot be negative")
       .nullable()
       .optional(),
     maxPendingOrdersPerPhone: z
+      .coerce
       .number()
       .int()
       .positive("Must be a positive number")

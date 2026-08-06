@@ -23,7 +23,7 @@ export const CartProducts = () => {
 
   if (items.length > 0) {
     const totalPrice = items.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
+      (sum, item) => sum + item.variant.price * item.quantity,
       0,
     );
 
@@ -33,12 +33,11 @@ export const CartProducts = () => {
           YOUR SHOPPING CART
         </h2>
         <GridProducts className="grid-cols-1">
-          {items.map(({ id, product, size, quantity, variant }) => (
+          {items.map(({ id, product, quantity, variant }) => (
             <CartProduct
               key={id}
               product={product}
               cartItemId={id}
-              size={size}
               quantity={quantity}
               variant={variant}
             />

@@ -63,7 +63,7 @@ export async function createProduct(
 
 export async function createProductWithVariants(
   product: InsertProduct,
-  variants: Omit<InsertProductVariant, "productId">[],
+  variants: (Omit<InsertProductVariant, "productId"> & { id?: number })[],
 ): Promise<ProductWithVariants | null> {
   try {
     return await productsRepository.createWithVariants(product, variants);

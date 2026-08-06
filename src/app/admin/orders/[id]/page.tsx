@@ -124,7 +124,7 @@ const OrderDetailContent = async ({ params }: Props) => {
                     {item.variant.product.name}
                   </p>
                   <p className="text-xs text-color-secondary">
-                    {item.variant.color} · Size {item.size} · Qty{" "}
+                    {item.variant.flavor} · {item.variant.quantity}{item.variant.quantityUnit} · Qty{" "}
                     {item.quantity}
                   </p>
                 </div>

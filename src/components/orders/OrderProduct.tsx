@@ -11,20 +11,18 @@ import { getBlurDataURL } from "@/lib/images/blur.server";
 
 interface OrderProductProps {
   product: ProductWithVariants;
-  size: OrderProductWithDetails["size"];
   quantity: OrderProductWithDetails["quantity"];
 }
 
 export const OrderProduct = async ({
   product,
-  size,
   quantity,
 }: OrderProductProps) => {
   const { name, price, category, id, variants } = product;
   const variant = variants[0];
   const blurDataURL = await getBlurDataURL(variant.images[0]);
 
-  const productLink = `/${category}/${id}?variant=${variant.color}`;
+  const productLink = `/${category}/${id}?variant=${variant.flavor}`;
 
   return (
     <div className="flex flex-col justify-between overflow-hidden rounded-md border border-solid border-border-primary">
@@ -48,8 +46,7 @@ export const OrderProduct = async ({
         <div className="text-sm">{formatPriceFromEuros(price)}</div>
 
         <div className="flex sm:hidden">
-          <div className="border-r pr-2.5 text-sm">{size}</div>
-          <div className="pl-2.5 text-sm">{variant.color}</div>
+          <div className="pl-2.5 text-sm">{variant.flavor} · {variant.quantity}{variant.quantityUnit}</div>
         </div>
 
         <div className="hidden items-center justify-between sm:flex">
@@ -62,8 +59,7 @@ export const OrderProduct = async ({
             </span>
           </div>
           <div className="flex">
-            <div className="border-r pr-2.5 text-sm">{size}</div>
-            <div className="pl-2.5 text-sm">{variant.color}</div>
+            <div className="pl-2.5 text-sm">{variant.flavor} · {variant.quantity}{variant.quantityUnit}</div>
           </div>
         </div>
       </div>

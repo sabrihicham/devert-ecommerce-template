@@ -22,6 +22,8 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      { protocol: "https", hostname: "www.optimumnutrition.com", pathname: "/cdn/shop/files/**" },
+      { protocol: "https", hostname: "main.thgimages.com" },
       // Only include Supabase pattern if URL is configured
       ...(supabaseHostname
         ? [

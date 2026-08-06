@@ -4,7 +4,6 @@ import { cartItems, productsVariants, productsItems } from "../schema";
 import type {
   CartItem,
   InsertCartItem,
-  ProductSize,
 } from "@/lib/db/drizzle/schema";
 
 export const cartRepository = {
@@ -43,9 +42,17 @@ export const cartRepository = {
         variant: {
           id: row.variant.id,
           productId: row.variant.productId,
-          color: row.variant.color,
-          sizes: row.variant.sizes,
+          flavor: row.variant.flavor,
+          form: row.variant.form,
+          quantity: Number(row.variant.quantity),
+          quantityUnit: row.variant.quantityUnit,
+          servings: row.variant.servings,
+          sku: row.variant.sku,
+          price: Number(row.variant.price),
+          compareAtPrice: row.variant.compareAtPrice === null ? null : Number(row.variant.compareAtPrice),
+          stock: row.variant.stock,
           images: row.variant.images,
+          isActive: row.variant.isActive,
           createdAt:
             row.variant.createdAt?.toISOString() ?? new Date().toISOString(),
           updatedAt:
@@ -55,10 +62,13 @@ export const cartRepository = {
           id: row.product.id,
           name: row.product.name,
           description: row.product.description,
-          price: Number(row.product.price),
+          price: Number(row.variant.price),
+          compareAtPrice: row.product.compareAtPrice === null ? null : Number(row.product.compareAtPrice),
+          stock: row.product.stock,
           category: row.product.category,
           img: row.product.img,
-          isFeatured: row.product.isFeatured,
+          isFeatured: row.product.isFeatured, isBestSeller: row.product.isBestSeller, isNewArrival: row.product.isNewArrival, status: row.product.status, publishedAt: row.product.publishedAt?.toISOString() ?? null,
+          brand: row.product.brand, ingredients: row.product.ingredients, usage: row.product.usage, warnings: row.product.warnings, tags: row.product.tags,
           createdAt:
             row.product.createdAt?.toISOString() ?? new Date().toISOString(),
           updatedAt:
@@ -71,10 +81,9 @@ export const cartRepository = {
   async findOne(
     userId: string,
     variantId: number,
-    size: ProductSize,
   ): Promise<CartItem | null> {
     return withRLS(userId, async (tx) =>
-      this.findOneInternal(tx, userId, variantId, size),
+      this.findOneInternal(tx, userId, variantId),
     );
   },
 
@@ -84,8 +93,10 @@ export const cartRepository = {
         tx,
         data.userId,
         data.variantId,
-        data.size as ProductSize,
       );
+
+      const [variant] = await tx.select({ stock: productsVariants.stock, isActive: productsVariants.isActive }).from(productsVariants).where(eq(productsVariants.id, data.variantId));
+      if (!variant || !variant.isActive || variant.stock < data.quantity || (existing && existing.quantity + data.quantity > variant.stock)) return null;
 
       if (existing) {
         return this.updateQuantityInternal(
@@ -101,7 +112,6 @@ export const cartRepository = {
           userId: data.userId,
           variantId: data.variantId,
           quantity: data.quantity,
-          size: data.size,
         })
         .returning();
 
@@ -117,7 +127,6 @@ export const cartRepository = {
           userId: data.userId,
           variantId: data.variantId,
           quantity: data.quantity,
-          size: data.size,
         })
         .returning();
 
@@ -158,7 +167,6 @@ export const cartRepository = {
     tx: RLSClient,
     userId: string,
     variantId: number,
-    size: ProductSize,
   ): Promise<CartItem | null> {
     const [result] = await tx
       .select()
@@ -167,7 +175,6 @@ export const cartRepository = {
         and(
           eq(cartItems.userId, userId),
           eq(cartItems.variantId, variantId),
-          eq(cartItems.size, size),
         ),
       );
 
@@ -179,6 +186,10 @@ export const cartRepository = {
     id: number,
     quantity: number,
   ): Promise<CartItem | null> {
+    const [current] = await tx.select({ variantId: cartItems.variantId }).from(cartItems).where(eq(cartItems.id, id));
+    if (!current) return null;
+    const [variant] = await tx.select({ stock: productsVariants.stock, isActive: productsVariants.isActive }).from(productsVariants).where(eq(productsVariants.id, current.variantId));
+    if (!variant || !variant.isActive || quantity > variant.stock) return null;
     const [result] = await tx
       .update(cartItems)
       .set({ quantity })
@@ -195,7 +206,6 @@ function transformCartItem(row: typeof cartItems.$inferSelect): CartItem {
     userId: row.userId,
     variantId: row.variantId,
     quantity: row.quantity,
-    size: row.size,
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),
   };
