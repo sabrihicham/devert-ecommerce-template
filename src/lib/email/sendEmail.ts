@@ -1,14 +1,16 @@
 import "server-only";
 
 import type { OrderWithDetails } from "@/lib/db/drizzle/schema";
+import { getWilayaName } from "@/constants/wilayas";
 
 import { escapeHtml, getContactEmailAddress, sendMail } from "./mailer";
 
 type OrderDetails = OrderWithDetails;
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
+const currencyFormatter = new Intl.NumberFormat("fr-DZ", {
   style: "currency",
-  currency: "EUR",
+  currency: "DZD",
+  maximumFractionDigits: 2,
 });
 
 function formatCurrency(amount: number) {
@@ -28,7 +30,7 @@ function formatAddress(address: OrderDetails["customerInfo"]["address"]) {
     address.line1,
     address.line2,
     address.city,
-    address.postal_code,
+    getWilayaName(address.wilaya) ?? address.wilaya,
     address.country,
   ]
     .filter(Boolean)
@@ -68,12 +70,13 @@ function formatOrderEmail(orderDetails: OrderDetails): string {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #333;">Thank you for your purchase!</h2>
       <p>Hello <strong>${escapeHtml(orderDetails.customerInfo.name)}</strong>,</p>
-      <p>Your order has been confirmed and will be delivered approximately on <strong>${deliveryDate}</strong>.</p>
+      <p>Your order has been confirmed and will be delivered approximately on <strong>${deliveryDate}</strong>. Please have <strong>${totalPrice}</strong> ready to pay in cash upon delivery.</p>
 
       <div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
         <h3 style="margin-top: 0; color: #333;">Order Details</h3>
         <p><strong>Order Number:</strong> #${orderDetails.orderNumber}</p>
         <p><strong>Order Date:</strong> ${formatOrderDate(orderDetails.createdAt)}</p>
+        <p><strong>Payment Method:</strong> Cash on Delivery</p>
       </div>
 
       <h3 style="color: #333;">Products</h3>

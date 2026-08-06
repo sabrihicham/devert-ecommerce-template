@@ -1,11 +1,19 @@
 "use server";
 
-import { cacheLife, cacheTag, updateTag } from "next/cache";
-import { productsRepository } from "@/lib/db/drizzle/repositories";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
+import {
+  productsRepository,
+  bannersRepository,
+  collectionsRepository,
+} from "@/lib/db/drizzle/repositories";
 import {
   type ProductCategory,
   productWithVariantsSchema,
+  selectBannerSchema,
+  selectCollectionSchema,
   type ProductWithVariants,
+  type Banner,
+  type Collection,
 } from "@/lib/db/drizzle/schema";
 
 /**
@@ -91,14 +99,121 @@ export async function getRandomProducts(
 /**
  * Invalidates all product caches immediately
  * Call this after creating, updating, or deleting products
- * Uses updateTag for read-your-own-writes semantics (user sees changes immediately)
+ * Uses revalidateTag so it works from both Server Actions and Route Handlers
  */
 export async function revalidateProducts(productId?: number): Promise<void> {
   // Always invalidate the general products tag
-  updateTag("products");
+  revalidateTag("products", "max");
 
   // If a specific product ID is provided, also invalidate that specific product
   if (productId) {
-    updateTag(`product-${productId}`);
+    revalidateTag(`product-${productId}`, "max");
   }
+}
+
+/**
+ * Fetch admin-curated "Featured" products for the homepage, with caching.
+ */
+export async function getFeaturedProducts(
+  limit: number = 8,
+): Promise<ProductWithVariants[]> {
+  "use cache";
+  cacheTag("products", "featured-products");
+  cacheLife("hours");
+
+  try {
+    const products = await productsRepository.findFeatured(limit);
+    return productWithVariantsSchema.array().parse(products);
+  } catch (error) {
+    console.error("Error fetching featured products:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch the most recently added products for a homepage "New Arrivals" section.
+ */
+export async function getNewArrivals(
+  limit: number = 8,
+): Promise<ProductWithVariants[]> {
+  "use cache";
+  cacheTag("products", "new-arrivals");
+  cacheLife("hours");
+
+  try {
+    const products = await productsRepository.findRecent(limit);
+    return productWithVariantsSchema.array().parse(products);
+  } catch (error) {
+    console.error("Error fetching new arrivals:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch active homepage hero-slider banners, ordered for display, with caching.
+ */
+export async function getActiveBanners(): Promise<Banner[]> {
+  "use cache";
+  cacheTag("banners");
+  cacheLife("hours");
+
+  try {
+    const banners = await bannersRepository.findActive();
+    return selectBannerSchema.array().parse(banners);
+  } catch (error) {
+    console.error("Error fetching homepage banners:", error);
+    return [];
+  }
+}
+
+/**
+ * Invalidates the homepage banners cache after admin mutations.
+ */
+export async function revalidateBanners(): Promise<void> {
+  revalidateTag("banners", "max");
+}
+
+/**
+ * Fetch all product collections (categories), with caching. Used to render
+ * the storefront navigation/footer and to validate `/[category]` routes.
+ */
+export async function getCollections(): Promise<Collection[]> {
+  "use cache";
+  cacheTag("collections");
+  cacheLife("hours");
+
+  try {
+    const collections = await collectionsRepository.findAll();
+    return selectCollectionSchema.array().parse(collections);
+  } catch (error) {
+    console.error("Error fetching collections:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch a single collection by slug, with caching. Returns null when the
+ * slug does not match any collection (used to 404 `/[category]` routes).
+ */
+export async function getCollectionBySlug(
+  slug: string,
+): Promise<Collection | null> {
+  "use cache";
+  cacheTag("collections", `collection-${slug}`);
+  cacheLife("hours");
+
+  try {
+    const collection = await collectionsRepository.findBySlug(slug);
+    return collection ? selectCollectionSchema.parse(collection) : null;
+  } catch (error) {
+    console.error("Error fetching collection:", error);
+    return null;
+  }
+}
+
+/**
+ * Invalidates the collections cache after admin mutations.
+ */
+export async function revalidateCollections(): Promise<void> {
+  revalidateTag("collections", "max");
 }

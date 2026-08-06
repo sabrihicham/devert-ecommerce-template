@@ -7,12 +7,13 @@ import { Toaster } from "sonner";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/providers";
+import { getCollections } from "@/app/actions";
 import "@/styles/globals.css";
 import "@/styles/colors.css";
 import "@/styles/animations.css";
 
 const defaultDescription =
-  "Modern ecommerce template built with Next.js 16, React 19, Drizzle, Better Auth, Supabase, and Stripe.";
+  "Modern ecommerce template built with Next.js 16, React 19, Drizzle, Better Auth, Supabase, and cash-on-delivery checkout.";
 
 function getMetadataBase() {
   try {
@@ -46,18 +47,20 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const categories = await getCollections();
+
   return (
     <html lang="en">
       <body className={GeistSans.className}>
         <Providers>
-          <Navbar />
+          <Navbar categories={categories} />
           <main className="pointer-events-auto mx-auto w-full max-w-[1920px]">
             {children}
             <Toaster position="bottom-right" />
             <Analytics />
             <SpeedInsights />
           </main>
-          <Footer />
+          <Footer categories={categories} />
         </Providers>
       </body>
     </html>

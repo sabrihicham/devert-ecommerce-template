@@ -1,6 +1,8 @@
 // Users
 export {
   users,
+  userRoleEnum,
+  UserRoleZod,
   selectUserSchema,
   insertUserSchema,
   updateUserSchema,
@@ -9,9 +11,22 @@ export {
   type UpdateUser,
 } from "./users";
 
+// Better Auth (session, account, verification)
+export { sessions, accounts, verifications } from "./auth";
+
+// Collections
+export {
+  collections,
+  selectCollectionSchema,
+  insertCollectionSchema,
+  updateCollectionSchema,
+  type Collection,
+  type InsertCollection,
+  type UpdateCollection,
+} from "./collections";
+
 // Products
 export {
-  productCategoryEnum,
   sizesEnum,
   ProductCategoryZod,
   ProductSizeZod,
@@ -59,11 +74,14 @@ export {
   orderItems,
   customerInfo,
   orderProducts,
+  orderStatusEnum,
+  OrderStatusZod,
   AddressSchema,
   InsertAddressSchema,
   selectOrderItemSchema,
   insertOrderItemSchema,
   createOrderItemInputSchema,
+  updateOrderStatusSchema,
   selectCustomerInfoSchema,
   insertCustomerInfoSchema,
   selectOrderProductSchema,
@@ -71,9 +89,11 @@ export {
   orderProductWithDetailsSchema,
   orderWithDetailsSchema,
   type Address,
+  type OrderStatus,
   type OrderItem,
   type InsertOrderItem,
   type CreateOrderItemInput,
+  type UpdateOrderStatusInput,
   type CustomerInfo,
   type InsertCustomerInfo,
   type OrderProduct,
@@ -95,6 +115,26 @@ export {
   type WishlistItemWithProduct,
 } from "./wishlist";
 
+// Store settings
+export {
+  storeSettings,
+  selectStoreSettingsSchema,
+  updateStoreSettingsSchema,
+  type StoreSettings,
+  type UpdateStoreSettingsInput,
+} from "./settings";
+
+// Homepage banners
+export {
+  homepageBanners,
+  selectBannerSchema,
+  insertBannerSchema,
+  updateBannerSchema,
+  type Banner,
+  type InsertBanner,
+  type UpdateBanner,
+} from "./banners";
+
 // Relations
 export {
   usersRelations,
@@ -105,4 +145,6 @@ export {
   customerInfoRelations,
   orderProductsRelations,
   wishlistRelations,
+  sessionsRelations,
+  accountsRelations,
 } from "./relations";

@@ -32,8 +32,7 @@ export interface DomainAddress {
   line1?: string;
   line2?: string;
   city?: string;
-  state?: string;
-  postalCode?: string;
+  wilaya?: string;
   country?: string;
 }
 

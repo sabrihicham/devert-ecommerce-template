@@ -12,6 +12,10 @@ const supabaseHostname = getSupabaseHostname();
 
 const nextConfig = {
   cacheComponents: true,
+  // Keep Next's project root local to this app when multiple lockfiles exist.
+  turbopack: {
+    root: __dirname,
+  },
   images: {
     remotePatterns: [
       {

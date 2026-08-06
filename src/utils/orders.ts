@@ -30,7 +30,7 @@ export function transformOrderToViewModel(
         line1: customerInfo.address.line1,
         line2: customerInfo.address.line2,
         city: customerInfo.address.city,
-        postalCode: customerInfo.address.postal_code,
+        wilaya: customerInfo.address.wilaya,
         country: customerInfo.address.country,
       } as DomainAddress,
     },

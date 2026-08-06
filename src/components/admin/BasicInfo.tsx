@@ -14,17 +14,17 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { ProductCategory } from "@/lib/db/drizzle/schema";
 
-const PRODUCT_CATEGORIES: { value: ProductCategory; label: string }[] = [
-  { value: "t-shirts", label: "T-Shirts" },
-  { value: "pants", label: "Pants" },
-  { value: "sweatshirts", label: "Sweatshirts" },
-];
+export interface CategoryOption {
+  value: string;
+  label: string;
+}
 
 export type BasicInfoRef = {
   name: string;
   description: string;
   price: string;
   category: ProductCategory | "";
+  isFeatured: boolean;
   reset: () => void;
 };
 
@@ -33,15 +33,17 @@ export interface BasicInfoInitialData {
   description?: string;
   price?: number;
   category?: ProductCategory;
+  isFeatured?: boolean;
 }
 
 interface BasicInfoProps {
   errors?: Record<string, string[]>;
   initialData?: BasicInfoInitialData;
+  categories: CategoryOption[];
 }
 
 export const BasicInfo = forwardRef<BasicInfoRef, BasicInfoProps>(
-  ({ errors, initialData }, ref) => {
+  ({ errors, initialData, categories }, ref) => {
     const [name, setName] = useState(initialData?.name || "");
     const [description, setDescription] = useState(
       initialData?.description || "",
@@ -50,17 +52,22 @@ export const BasicInfo = forwardRef<BasicInfoRef, BasicInfoProps>(
     const [category, setCategory] = useState<ProductCategory | "">(
       initialData?.category || "",
     );
+    const [isFeatured, setIsFeatured] = useState(
+      initialData?.isFeatured ?? false,
+    );
 
     useImperativeHandle(ref, () => ({
       name,
       description,
       price,
       category,
+      isFeatured,
       reset: () => {
         setName("");
         setDescription("");
         setPrice("");
         setCategory("");
+        setIsFeatured(false);
       },
     }));
 
@@ -173,7 +180,7 @@ export const BasicInfo = forwardRef<BasicInfoRef, BasicInfoProps>(
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {PRODUCT_CATEGORIES.map(({ value, label }) => (
+                {categories.map(({ value, label }) => (
                   <SelectItem key={value} value={value}>
                     {label}
                   </SelectItem>
@@ -186,6 +193,33 @@ export const BasicInfo = forwardRef<BasicInfoRef, BasicInfoProps>(
               </p>
             )}
           </div>
+        </div>
+
+        {/* Featured toggle */}
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border-primary bg-background-secondary p-4">
+          <div>
+            <p className="text-sm font-medium text-white">Featured product</p>
+            <p className="mt-0.5 text-xs text-color-tertiary">
+              Show this product in the homepage &quot;Featured&quot; carousel.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isFeatured}
+            onClick={() => setIsFeatured((prev) => !prev)}
+            className={cn(
+              "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+              isFeatured ? "bg-violet-600" : "bg-background-tertiary",
+            )}
+          >
+            <span
+              className={cn(
+                "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform",
+                isFeatured ? "translate-x-[22px]" : "translate-x-0.5",
+              )}
+            />
+          </button>
         </div>
       </div>
     );

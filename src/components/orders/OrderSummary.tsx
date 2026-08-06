@@ -4,6 +4,7 @@ import type { OrderWithDetails } from "@/lib/db/drizzle/schema";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { formatPriceFromCents } from "@/utils/formatters";
+import { getWilayaName } from "@/constants/wilayas";
 /** ICONS */
 import {
   HiOutlineCube,
@@ -108,8 +109,9 @@ export function OrderSummary({ order }: OrderSummaryProps) {
             </p>
           )}
           <p className="text-muted-foreground">
-            {order.customerInfo?.address?.postal_code}{" "}
             {order.customerInfo?.address?.city}
+            {order.customerInfo?.address?.wilaya &&
+              `, ${getWilayaName(order.customerInfo.address.wilaya) ?? order.customerInfo.address.wilaya}`}
           </p>
           <p className="text-muted-foreground">
             {order.customerInfo?.address?.country}

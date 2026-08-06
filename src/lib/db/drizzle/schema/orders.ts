@@ -11,6 +11,7 @@ import {
   jsonb,
   index,
   check,
+  pgEnum,
   pgPolicy,
   foreignKey,
 } from "drizzle-orm/pg-core";
@@ -21,14 +22,14 @@ import {
   selectProductSchema,
   selectVariantSchema,
 } from "./products";
+import { WILAYA_CODES } from "@/constants/wilayas";
 
 export const AddressSchema = z.object({
   line1: z.string(),
   line2: z.string().nullable().optional(),
   city: z.string(),
-  state: z.string().nullable().optional(),
-  postal_code: z.string(),
-  country: z.string(),
+  wilaya: z.string(),
+  country: z.literal("Algeria"),
 });
 
 export const InsertAddressSchema = z.object({
@@ -39,16 +40,35 @@ export const InsertAddressSchema = z.object({
     .optional()
     .transform((val) => val ?? undefined),
   city: z.string().min(1, "City is required"),
-  state: z
-    .string()
-    .nullable()
-    .optional()
-    .transform((val) => val ?? undefined),
-  postal_code: z.string().min(1, "Postal code is required"),
-  country: z.string().min(1, "Country is required"),
+  wilaya: z.enum(WILAYA_CODES, {
+    message: "A valid wilaya is required",
+  }),
+  country: z.literal("Algeria").default("Algeria"),
 });
 
 export type Address = z.infer<typeof AddressSchema>;
+
+export const orderStatusEnum = pgEnum("order_status", [
+  "pending",
+  "confirmed",
+  "no_answer",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+  "returned",
+]);
+
+export const OrderStatusZod = z.enum([
+  "pending",
+  "confirmed",
+  "no_answer",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+  "returned",
+]);
+
+export type OrderStatus = z.infer<typeof OrderStatusZod>;
 
 export const orderItems = pgTable(
   "order_items",
@@ -57,6 +77,7 @@ export const orderItems = pgTable(
     userId: text("user_id").notNull(),
     deliveryDate: timestamp("delivery_date", { withTimezone: true }).notNull(),
     orderNumber: bigint("order_number", { mode: "number" }).notNull().unique(),
+    status: orderStatusEnum("status").notNull().default("pending"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
@@ -73,6 +94,7 @@ export const orderItems = pgTable(
     index("idx_order_items_created_at").on(table.createdAt),
     index("idx_order_items_delivery_date").on(table.deliveryDate),
     index("idx_order_items_user_created").on(table.userId, table.createdAt),
+    index("idx_order_items_status").on(table.status),
     pgPolicy("Backend can manage orders", {
       as: "permissive",
       for: "all",
@@ -98,7 +120,7 @@ export const customerInfo = pgTable(
     email: text("email").notNull(),
     phone: text("phone"),
     address: jsonb("address").notNull().$type<Address>(),
-    stripeOrderId: text("stripe_order_id").notNull().unique(),
+    orderRef: text("order_ref").notNull().unique(),
     totalPrice: bigint("total_price", { mode: "number" }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
@@ -112,7 +134,7 @@ export const customerInfo = pgTable(
       .onDelete("cascade")
       .onUpdate("cascade"),
     index("idx_customer_info_order_id").on(table.orderId),
-    index("idx_customer_info_stripe_order_id").on(table.stripeOrderId),
+    index("idx_customer_info_order_ref").on(table.orderRef),
     index("idx_customer_info_email").on(table.email),
     pgPolicy("Backend can manage customer info", {
       as: "permissive",
@@ -196,6 +218,12 @@ export const createOrderItemInputSchema = insertOrderItemSchema.pick({
   userId: true,
   deliveryDate: true,
 });
+
+export const updateOrderStatusSchema = z.object({
+  status: OrderStatusZod,
+});
+
+export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
 
 export const selectCustomerInfoSchema = createSelectSchema(customerInfo, {
   address: AddressSchema,

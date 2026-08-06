@@ -76,7 +76,6 @@ const OrderProducts = async ({ id }: { id: string }) => {
         variants: [
           {
             id: variant.id,
-            stripeId: variant.stripeId,
             productId: variant.productId,
             color: variant.color,
             sizes: variant.sizes,

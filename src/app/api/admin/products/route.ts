@@ -9,13 +9,7 @@ import {
   ProductSizeZod,
 } from "@/lib/db/drizzle/schema";
 import { createServiceClient } from "@/lib/db/supabase/server";
-import {
-  archiveStripeProduct,
-  createStripeProductForVariant,
-  deactivateStripePrice,
-  updateStripeProduct,
-} from "@/services/stripe.service";
-import { auth } from "@/utils/auth";
+import { verifyAdmin } from "@/utils/admin";
 
 const BUCKET = "product-images";
 
@@ -25,9 +19,6 @@ type ProcessedVariant = Omit<InsertProductVariant, "productId"> & {
 
 type BuildVariantsTracker = {
   uploadedImageUrls: string[];
-  newVariantStripePriceIds: string[];
-  replacementStripePriceIds: string[];
-  previousStripePriceIdsToDeactivate: string[];
 };
 
 const productIdSchema = z.coerce.number().int().positive();
@@ -37,12 +28,12 @@ const productFormSchema = z.object({
   description: z.string().trim().min(1, "Description is required"),
   price: z.coerce.number().positive("Price must be greater than 0"),
   category: ProductCategoryZod,
+  isFeatured: z.boolean().default(false),
 });
 
 const variantFormSchema = z.object({
   id: z.number().int().positive().optional(),
   color: z.string().trim().min(1, "Color is required"),
-  stripe_id: z.string().optional().default(""),
   sizes: z.array(ProductSizeZod).min(1, "At least one size is required"),
   imageCount: z.number().int().nonnegative().optional(),
   existingImages: z.array(z.string()).optional(),
@@ -61,19 +52,7 @@ function validationErrorResponse(error: z.ZodError, message: string) {
   );
 }
 
-async function verifyAdmin(request: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-
-  if (!session?.user || !adminEmail || session.user.email !== adminEmail) {
-    return null;
-  }
-
-  return session.user;
-}
 
 function parseVariantsData(rawVariants: FormDataEntryValue | null): VariantFormInput[] {
   if (typeof rawVariants !== "string") {
@@ -191,12 +170,8 @@ function dedupeStrings(values: Array<string | null | undefined>) {
 
 async function cleanupExternalResources({
   imageUrls = [],
-  archivePriceIds = [],
-  deactivatePriceIds = [],
 }: {
   imageUrls?: string[];
-  archivePriceIds?: string[];
-  deactivatePriceIds?: string[];
 }) {
   const tasks: Promise<void>[] = [];
 
@@ -204,26 +179,6 @@ async function cleanupExternalResources({
     tasks.push(
       deleteImageByUrl(imageUrl).catch((error) => {
         console.error("Error deleting image during cleanup:", error);
-      }),
-    );
-  }
-
-  for (const priceId of dedupeStrings(archivePriceIds)) {
-    tasks.push(
-      archiveStripeProduct(priceId).then((archived) => {
-        if (!archived) {
-          console.error(`Could not archive Stripe product for price ${priceId}`);
-        }
-      }),
-    );
-  }
-
-  for (const priceId of dedupeStrings(deactivatePriceIds)) {
-    tasks.push(
-      deactivateStripePrice(priceId).then((deactivated) => {
-        if (!deactivated) {
-          console.error(`Could not deactivate Stripe price ${priceId}`);
-        }
       }),
     );
   }
@@ -243,19 +198,11 @@ async function buildVariants({
   formData,
   variantsData,
   productId,
-  productName,
-  description,
-  price,
-  category,
   tracker,
 }: {
   formData: FormData;
   variantsData: VariantFormInput[];
   productId: number;
-  productName: string;
-  description: string;
-  price: number;
-  category: z.infer<typeof ProductCategoryZod>;
   tracker: BuildVariantsTracker;
 }): Promise<ProcessedVariant[]> {
   return Promise.all(
@@ -287,51 +234,8 @@ async function buildVariants({
         throw new Error(`Variant ${variant.color} must include at least one image`);
       }
 
-      let stripeId = variant.stripe_id;
-      if (variant.id && stripeId) {
-        const updatedStripe = await updateStripeProduct(stripeId, {
-          productName,
-          variantColor: variant.color,
-          description,
-          price,
-          images,
-          metadata: {
-            product_id: productId.toString(),
-            category,
-          },
-        });
-
-        if (!updatedStripe) {
-          throw new Error(`Error updating Stripe product for variant ${variant.color}`);
-        }
-
-        stripeId = updatedStripe.priceId;
-
-        if (updatedStripe.replacedPriceId) {
-          tracker.replacementStripePriceIds.push(updatedStripe.priceId);
-          tracker.previousStripePriceIdsToDeactivate.push(
-            updatedStripe.replacedPriceId,
-          );
-        }
-      } else if (!stripeId || stripeId.trim() === "") {
-        const stripeResult = await createStripeProductForVariant({
-          productName,
-          variantColor: variant.color,
-          description,
-          price,
-          images,
-          metadata: {
-            product_id: productId.toString(),
-            category,
-          },
-        });
-        stripeId = stripeResult.priceId;
-        tracker.newVariantStripePriceIds.push(stripeResult.priceId);
-      }
-
       return {
         id: variant.id,
-        stripeId,
         color: variant.color,
         sizes: variant.sizes,
         images,
@@ -344,9 +248,6 @@ export async function POST(request: NextRequest) {
   let createdProductId: number | null = null;
   const tracker: BuildVariantsTracker = {
     uploadedImageUrls: [],
-    newVariantStripePriceIds: [],
-    replacementStripePriceIds: [],
-    previousStripePriceIdsToDeactivate: [],
   };
 
   try {
@@ -361,6 +262,7 @@ export async function POST(request: NextRequest) {
       description: formData.get("description"),
       price: formData.get("price"),
       category: formData.get("category"),
+      isFeatured: formData.get("isFeatured") === "true",
     });
     const variantsData = parseVariantsData(formData.get("variants"));
     const mainImageEntry = formData.get("mainImage");
@@ -398,10 +300,6 @@ export async function POST(request: NextRequest) {
       formData,
       variantsData,
       productId: product.id,
-      productName: productData.name,
-      description: productData.description,
-      price: productData.price,
-      category: productData.category,
       tracker,
     });
 
@@ -436,8 +334,7 @@ export async function POST(request: NextRequest) {
     }
 
     await cleanupExternalResources({
-      archivePriceIds: tracker.newVariantStripePriceIds,
-      deactivatePriceIds: tracker.replacementStripePriceIds,
+      imageUrls: tracker.uploadedImageUrls,
     });
 
     if (error instanceof z.ZodError) {
@@ -455,9 +352,6 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const tracker: BuildVariantsTracker = {
     uploadedImageUrls: [],
-    newVariantStripePriceIds: [],
-    replacementStripePriceIds: [],
-    previousStripePriceIdsToDeactivate: [],
   };
 
   try {
@@ -473,6 +367,7 @@ export async function PUT(request: NextRequest) {
       description: formData.get("description"),
       price: formData.get("price"),
       category: formData.get("category"),
+      isFeatured: formData.get("isFeatured") === "true",
     });
     const variantsData = parseVariantsData(formData.get("variants"));
     const mainImageEntry = formData.get("mainImage");
@@ -493,7 +388,6 @@ export async function PUT(request: NextRequest) {
     const removedVariants = existingProduct.variants.filter(
       (variant) => !nextVariantIds.has(variant.id),
     );
-    const removedVariantStripeIds = removedVariants.map((variant) => variant.stripeId);
     const removedImageUrls = dedupeStrings([
       ...removedVariants.flatMap((variant) => variant.images),
       ...variantsData.flatMap((variant) => variant.removedImages ?? []),
@@ -520,10 +414,6 @@ export async function PUT(request: NextRequest) {
       formData,
       variantsData,
       productId: id,
-      productName: productData.name,
-      description: productData.description,
-      price: productData.price,
-      category: productData.category,
       tracker,
     });
 
@@ -549,8 +439,6 @@ export async function PUT(request: NextRequest) {
         ...removedImageUrls,
         ...(previousMainImageUrl ? [previousMainImageUrl] : []),
       ],
-      archivePriceIds: removedVariantStripeIds,
-      deactivatePriceIds: tracker.previousStripePriceIdsToDeactivate,
     });
 
     return NextResponse.json({
@@ -561,8 +449,6 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     await cleanupExternalResources({
       imageUrls: tracker.uploadedImageUrls,
-      archivePriceIds: tracker.newVariantStripePriceIds,
-      deactivatePriceIds: tracker.replacementStripePriceIds,
     });
 
     if (error instanceof z.ZodError) {
@@ -597,9 +483,6 @@ export async function DELETE(request: NextRequest) {
 
     await safeRevalidateProducts(productId);
     await cleanupProductImages(productId);
-    await cleanupExternalResources({
-      archivePriceIds: existingProduct.variants.map((variant) => variant.stripeId),
-    });
 
     return NextResponse.json({
       success: true,

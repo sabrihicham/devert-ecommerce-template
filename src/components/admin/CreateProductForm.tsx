@@ -4,8 +4,13 @@ import { useRouter } from "next/navigation";
 import { ProductForm } from "./ProductForm";
 import { revalidateProducts } from "@/app/actions";
 import type { ProductWithVariants } from "@/lib/db/drizzle/schema";
+import type { CategoryOption } from "./BasicInfo";
 
-export function CreateProductForm() {
+export function CreateProductForm({
+  categories,
+}: {
+  categories: CategoryOption[];
+}) {
   const router = useRouter();
 
   const handleSuccess = async (createdProduct: ProductWithVariants) => {
@@ -14,5 +19,7 @@ export function CreateProductForm() {
     router.push("/");
   };
 
-  return <ProductForm mode="create" onSuccess={handleSuccess} />;
+  return (
+    <ProductForm mode="create" categories={categories} onSuccess={handleSuccess} />
+  );
 }

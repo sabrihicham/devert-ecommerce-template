@@ -56,6 +56,7 @@ export const productsRepository = {
         price: String(data.price),
         category: data.category,
         img: data.img,
+        isFeatured: data.isFeatured ?? false,
       })
       .returning();
 
@@ -75,6 +76,7 @@ export const productsRepository = {
           price: String(product.price),
           category: product.category,
           img: product.img,
+          isFeatured: product.isFeatured ?? false,
         })
         .returning();
 
@@ -85,7 +87,6 @@ export const productsRepository = {
         .values(
           variants.map((v) => ({
             productId: newProduct.id,
-            stripeId: v.stripeId,
             color: v.color,
             sizes: v.sizes,
             images: v.images,
@@ -112,6 +113,7 @@ export const productsRepository = {
     if (data.price !== undefined) updateData.price = String(data.price);
     if (data.category !== undefined) updateData.category = data.category;
     if (data.img !== undefined) updateData.img = data.img;
+    if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
 
     const [result] = await db
       .update(productsItems)
@@ -127,7 +129,6 @@ export const productsRepository = {
     product: Partial<InsertProduct>,
     variants: Array<{
       id?: number;
-      stripeId: string;
       color: string;
       sizes: string[];
       images: string[];
@@ -143,6 +144,8 @@ export const productsRepository = {
       if (product.category !== undefined)
         updateData.category = product.category;
       if (product.img !== undefined) updateData.img = product.img;
+      if (product.isFeatured !== undefined)
+        updateData.isFeatured = product.isFeatured;
 
       const [updatedProduct] = await tx
         .update(productsItems)
@@ -190,7 +193,6 @@ export const productsRepository = {
           await tx
             .update(productsVariants)
             .set({
-              stripeId: variant.stripeId,
               color: variant.color,
               sizes: parseSizes(variant.sizes),
               images: variant.images,
@@ -204,7 +206,6 @@ export const productsRepository = {
         await tx.insert(productsVariants).values(
           variantsToCreate.map((v) => ({
             productId: id,
-            stripeId: v.stripeId,
             color: v.color,
             sizes: parseSizes(v.sizes),
             images: v.images,
@@ -250,6 +251,29 @@ export const productsRepository = {
 
     return result.map(transformProduct);
   },
+
+  /** Most recently created products, for a homepage "New Arrivals" section. */
+  async findRecent(limit: number = 8): Promise<ProductWithVariants[]> {
+    const result = await db.query.productsItems.findMany({
+      with: { variants: true },
+      orderBy: [desc(productsItems.createdAt)],
+      limit,
+    });
+
+    return result.map(transformProduct);
+  },
+
+  /** Admin-curated products, for a homepage "Featured Products" section. */
+  async findFeatured(limit: number = 8): Promise<ProductWithVariants[]> {
+    const result = await db.query.productsItems.findMany({
+      where: eq(productsItems.isFeatured, true),
+      with: { variants: true },
+      orderBy: [desc(productsItems.createdAt)],
+      limit,
+    });
+
+    return result.map(transformProduct);
+  },
 };
 
 function transformProductBase(row: typeof productsItems.$inferSelect): Product {
@@ -260,6 +284,7 @@ function transformProductBase(row: typeof productsItems.$inferSelect): Product {
     price: Number(row.price),
     category: row.category,
     img: row.img,
+    isFeatured: row.isFeatured,
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),
   };
@@ -269,7 +294,6 @@ function transformVariant(row: typeof productsVariants.$inferSelect) {
   return {
     id: row.id,
     productId: row.productId,
-    stripeId: row.stripeId,
     color: row.color,
     sizes: row.sizes,
     images: row.images,

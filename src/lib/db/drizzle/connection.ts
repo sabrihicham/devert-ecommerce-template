@@ -5,11 +5,29 @@ import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL!;
 
-const queryClient = postgres(connectionString, {
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-});
+// In dev, Next.js hot-reloads this module on every save, which would
+// otherwise create a brand-new postgres-js client (and new DB connections)
+// each time without closing the previous one, eventually exhausting the
+// Supabase pooler's connection limit. Cache the client on `globalThis` so
+// Fast Refresh reuses the same instance.
+const globalForDb = globalThis as unknown as {
+  queryClient?: ReturnType<typeof postgres>;
+};
+
+const queryClient =
+  globalForDb.queryClient ??
+  postgres(connectionString, {
+    max: 10,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    // Required when connecting through Supabase's transaction pooler (port 6543),
+    // which does not support prepared statements.
+    prepare: false,
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.queryClient = queryClient;
+}
 
 export const db = drizzle(queryClient, { schema });
 export { schema };

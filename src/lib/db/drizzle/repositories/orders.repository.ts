@@ -1,4 +1,4 @@
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and, count } from "drizzle-orm";
 import { db } from "../connection";
 import {
   orderItems,
@@ -12,7 +12,22 @@ import type {
   CreateOrderItemInput,
   InsertOrderProduct,
   InsertCustomerInfo,
+  OrderStatus,
 } from "@/lib/db/drizzle/schema";
+
+export interface AdminOrdersFilter {
+  status?: OrderStatus;
+  wilaya?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AdminOrdersResult {
+  orders: OrderWithDetails[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
 
 const ORDER_NUMBER_LOCK_NAMESPACE = 42_001;
 const ORDER_NUMBER_LOCK_RESOURCE = 1;
@@ -20,11 +35,87 @@ const MAX_CREATE_COMPLETE_ATTEMPTS = 3;
 const UNIQUE_VIOLATION_CODE = "23505";
 
 export const ordersRepository = {
-  async findByStripeSessionId(
-    stripeSessionId: string,
+  async findAllForAdmin(
+    filter: AdminOrdersFilter = {},
+  ): Promise<AdminOrdersResult> {
+    const page = filter.page && filter.page > 0 ? filter.page : 1;
+    const pageSize =
+      filter.pageSize && filter.pageSize > 0 ? filter.pageSize : 20;
+
+    const conditions = [];
+    if (filter.status) {
+      conditions.push(eq(orderItems.status, filter.status));
+    }
+    if (filter.wilaya) {
+      conditions.push(
+        sql`exists (
+          select 1 from customer_info
+          where customer_info.order_id = ${orderItems.id}
+            and customer_info.address ->> 'wilaya' = ${filter.wilaya}
+        )`,
+      );
+    }
+    const whereClause = conditions.length ? and(...conditions) : undefined;
+
+    const [rows, totalRows] = await Promise.all([
+      db.query.orderItems.findMany({
+        where: whereClause,
+        with: ORDER_WITH_DETAILS,
+        orderBy: [desc(orderItems.createdAt)],
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+      }),
+      db.select({ total: count() }).from(orderItems).where(whereClause),
+    ]);
+
+    return {
+      orders: rows.map(transformOrderWithDetails),
+      total: Number(totalRows[0]?.total ?? 0),
+      page,
+      pageSize,
+    };
+  },
+
+  async updateStatus(
+    id: number,
+    status: OrderStatus,
+  ): Promise<OrderWithDetails | null> {
+    const [updated] = await db
+      .update(orderItems)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(orderItems.id, id))
+      .returning({ id: orderItems.id });
+
+    if (!updated) return null;
+    return this.findById(updated.id);
+  },
+
+  async countPriorIssuesByPhone(
+    phone: string | null,
+    excludeOrderId: number,
+  ): Promise<number> {
+    if (!phone) return 0;
+
+    const [row] = await db
+      .select({ total: count() })
+      .from(orderItems)
+      .innerJoin(customerInfo, eq(customerInfo.orderId, orderItems.id))
+      .where(
+        and(
+          eq(customerInfo.phone, phone),
+          sql`${orderItems.id} != ${excludeOrderId}`,
+          sql`${orderItems.status} in ('cancelled', 'no_answer')`,
+        ),
+      );
+
+    return Number(row?.total ?? 0);
+  },
+
+  async findByOrderRef(
+    orderRef: string,
   ): Promise<OrderWithDetails | null> {
     const customer = await db.query.customerInfo.findFirst({
-      where: eq(customerInfo.stripeOrderId, stripeSessionId),
+      where: eq(customerInfo.orderRef, orderRef),
     });
 
     if (!customer) return null;
@@ -66,8 +157,8 @@ export const ordersRepository = {
     customerData: Omit<InsertCustomerInfo, "orderId">,
     products: Omit<InsertOrderProduct, "orderId">[],
   ): Promise<OrderWithDetails | null> {
-    const existingOrder = await this.findByStripeSessionId(
-      customerData.stripeOrderId,
+    const existingOrder = await this.findByOrderRef(
+      customerData.orderRef,
     );
     if (existingOrder) {
       return existingOrder;
@@ -103,7 +194,7 @@ export const ordersRepository = {
             email: customerData.email,
             phone: customerData.phone,
             address: customerData.address,
-            stripeOrderId: customerData.stripeOrderId,
+            orderRef: customerData.orderRef,
             totalPrice: customerData.totalPrice,
           });
 
@@ -128,8 +219,8 @@ export const ordersRepository = {
           throw error;
         }
 
-        const concurrentOrder = await this.findByStripeSessionId(
-          customerData.stripeOrderId,
+        const concurrentOrder = await this.findByOrderRef(
+          customerData.orderRef,
         );
         if (concurrentOrder) {
           return concurrentOrder;
@@ -176,6 +267,7 @@ function transformOrderWithDetails(row: {
   userId: string;
   deliveryDate: Date;
   orderNumber: number;
+  status: OrderStatus;
   createdAt: Date | null;
   updatedAt: Date | null;
   customerInfo: typeof customerInfo.$inferSelect | null;
@@ -197,6 +289,7 @@ function transformOrderWithDetails(row: {
     userId: row.userId,
     deliveryDate: row.deliveryDate.toISOString(),
     orderNumber: row.orderNumber,
+    status: row.status,
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),
     customerInfo: row.customerInfo
@@ -207,7 +300,7 @@ function transformOrderWithDetails(row: {
           email: row.customerInfo.email,
           phone: row.customerInfo.phone,
           address: row.customerInfo.address,
-          stripeOrderId: row.customerInfo.stripeOrderId,
+          orderRef: row.customerInfo.orderRef,
           totalPrice: row.customerInfo.totalPrice,
           createdAt:
             row.customerInfo.createdAt?.toISOString() ??
@@ -222,8 +315,8 @@ function transformOrderWithDetails(row: {
           name: "",
           email: "",
           phone: null,
-          address: { line1: "", city: "", postal_code: "", country: "" },
-          stripeOrderId: "",
+          address: { line1: "", city: "", wilaya: "", country: "Algeria" as const },
+          orderRef: "",
           totalPrice: 0,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -239,7 +332,6 @@ function transformOrderWithDetails(row: {
       variant: {
         id: op.variant.id,
         productId: op.variant.productId,
-        stripeId: op.variant.stripeId,
         color: op.variant.color,
         sizes: op.variant.sizes,
         images: op.variant.images,
@@ -254,6 +346,7 @@ function transformOrderWithDetails(row: {
           price: Number(op.variant.product.price),
           category: op.variant.product.category,
           img: op.variant.product.img,
+          isFeatured: op.variant.product.isFeatured,
           createdAt:
             op.variant.product.createdAt?.toISOString() ??
             new Date().toISOString(),

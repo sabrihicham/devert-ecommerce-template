@@ -43,7 +43,6 @@ export const cartRepository = {
         variant: {
           id: row.variant.id,
           productId: row.variant.productId,
-          stripeId: row.variant.stripeId,
           color: row.variant.color,
           sizes: row.variant.sizes,
           images: row.variant.images,
@@ -59,6 +58,7 @@ export const cartRepository = {
           price: Number(row.product.price),
           category: row.product.category,
           img: row.product.img,
+          isFeatured: row.product.isFeatured,
           createdAt:
             row.product.createdAt?.toISOString() ?? new Date().toISOString(),
           updatedAt:
@@ -102,7 +102,6 @@ export const cartRepository = {
           variantId: data.variantId,
           quantity: data.quantity,
           size: data.size,
-          stripeId: data.stripeId,
         })
         .returning();
 
@@ -119,7 +118,6 @@ export const cartRepository = {
           variantId: data.variantId,
           quantity: data.quantity,
           size: data.size,
-          stripeId: data.stripeId,
         })
         .returning();
 
@@ -198,7 +196,6 @@ function transformCartItem(row: typeof cartItems.$inferSelect): CartItem {
     variantId: row.variantId,
     quantity: row.quantity,
     size: row.size,
-    stripeId: row.stripeId,
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),
   };

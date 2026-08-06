@@ -1,6 +1,6 @@
 # Next.js Ecommerce Template
 
-Modern ecommerce starter built with Next.js 16, React 19, App Router, Drizzle ORM, Supabase, Better Auth, Stripe, TanStack Query, Tailwind CSS, and Zod.
+Modern ecommerce starter built with Next.js 16, React 19, App Router, Drizzle ORM, Supabase, Better Auth, TanStack Query, Tailwind CSS, and Zod.
 
 ## Stack
 
@@ -12,7 +12,7 @@ Modern ecommerce starter built with Next.js 16, React 19, App Router, Drizzle OR
 - Drizzle ORM
 - Supabase PostgreSQL
 - Better Auth
-- Stripe Checkout
+- Cash on delivery checkout (Algeria)
 - Zod
 - Nodemailer
 
@@ -20,7 +20,7 @@ Modern ecommerce starter built with Next.js 16, React 19, App Router, Drizzle OR
 
 - Product catalog with categories and variants
 - Shopping cart and wishlist
-- Stripe checkout
+- Cash on delivery checkout
 - Order history
 - Admin product management
 - Email notifications
@@ -68,11 +68,6 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 # Better Auth
 BETTER_AUTH_SECRET=your_better_auth_secret
 
-# Stripe
-STRIPE_SECRET_KEY=your_stripe_secret_key
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-
 # Email
 EMAIL_SERVER_HOST=your_email_host
 EMAIL_SERVER_PORT=your_email_port
@@ -107,7 +102,7 @@ src/
   app/         App Router routes, layouts, pages, route handlers
   components/  UI and feature components
   hooks/       Client hooks and React Query hooks
-  lib/         Infra code: auth, db, email, Stripe, shared helpers
+  lib/         Infra code: auth, db, email, shared helpers
   schemas/     Zod schemas
   services/    Business logic
   styles/      Global CSS
@@ -118,7 +113,6 @@ src/
 ## Deployment Notes
 
 - Configure all environment variables in production.
-- Use a public webhook URL for Stripe.
 - Run `npm run db:migrate` before `npm run db:push` on new environments.
 - Set `NEXT_PUBLIC_APP_URL` to the production domain.
 

@@ -53,6 +53,7 @@ export const wishlistRepository = {
           price: Number(row.product.price),
           category: row.product.category,
           img: row.product.img,
+          isFeatured: row.product.isFeatured,
           createdAt:
             row.product.createdAt?.toISOString() ?? new Date().toISOString(),
           updatedAt:
@@ -60,7 +61,6 @@ export const wishlistRepository = {
           variants: (variantsByProduct.get(row.product.id) || []).map((v) => ({
             id: v.id,
             productId: v.productId,
-            stripeId: v.stripeId,
             color: v.color,
             sizes: v.sizes,
             images: v.images,

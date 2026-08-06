@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { createProduct, updateProduct } from "./productMutations";
+import { createProduct, updateProduct, deleteProduct } from "./productMutations";
 
 export const useProductMutation = () => {
   const create = useMutation({
@@ -13,6 +13,13 @@ export const useProductMutation = () => {
     mutationFn: updateProduct,
     onError: (error) => {
       console.error("Error al actualizar el producto:", error);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteProduct,
+    onError: (error) => {
+      console.error("Error deleting product:", error);
     },
   });
 
@@ -31,5 +38,10 @@ export const useProductMutation = () => {
     isUpdateError: update.isError,
     isUpdateSuccess: update.isSuccess,
     updateError: update.error,
+    // Delete mutations
+    deleteProduct: deleteMutation.mutate,
+    deleteProductAsync: deleteMutation.mutateAsync,
+    isDeletePending: deleteMutation.isPending,
   };
 };
+

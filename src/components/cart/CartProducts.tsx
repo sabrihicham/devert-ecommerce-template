@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { useCartDetails } from "@/hooks/cart";
 import { SVGLoadingIcon } from "@/components/ui/loader";
+import { formatPriceFromEuros } from "@/utils/formatters";
 
 import { ButtonCheckout } from "./ButtonCheckout";
 import { CartProduct } from "./CartProduct";
@@ -21,9 +22,10 @@ export const CartProducts = () => {
   }
 
   if (items.length > 0) {
-    const totalPrice = items
-      .reduce((sum, item) => sum + item.product.price * item.quantity, 0)
-      .toFixed(2);
+    const totalPrice = items.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0,
+    );
 
     return (
       <div className="pt-12">
@@ -47,7 +49,7 @@ export const CartProducts = () => {
           <div className="flex w-1/2 flex-col justify-center gap-2 p-2.5 text-center">
             <div className="flex justify-center gap-2.5 text-sm">
               <span>Total:</span>
-              <span>{totalPrice} EUR</span>
+              <span>{formatPriceFromEuros(totalPrice)}</span>
             </div>
             <span className="text-xs">+ TAX INCL.</span>
           </div>

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { EditProductForm } from "@/components/admin";
 import { getProductById } from "@/services/products.service";
+import { getCollections } from "@/app/actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface EditProductPageProps {
@@ -20,13 +21,21 @@ async function DynamicEditProductContent({
     notFound();
   }
 
-  const product = await getProductById(productId);
+  const [product, collections] = await Promise.all([
+    getProductById(productId),
+    getCollections(),
+  ]);
 
   if (!product) {
     notFound();
   }
 
-  return <EditProductForm product={product} />;
+  const categories = collections.map((c) => ({
+    value: c.slug,
+    label: c.name,
+  }));
+
+  return <EditProductForm product={product} categories={categories} />;
 }
 
 function EditProductSkeleton() {

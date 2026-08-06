@@ -12,8 +12,9 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import type { Collection } from "@/lib/db/drizzle/schema";
 
-export function LinksDesktop() {
+export function LinksDesktop({ categories }: { categories: Collection[] }) {
   return (
     <NavigationMenu>
       <NavigationMenuList>
@@ -36,20 +37,15 @@ export function LinksDesktop() {
                   </Link>
                 </NavigationMenuLink>
               </li>
-              <ListItem href="/t-shirts" title="T-SHIRTS">
-                Our men&apos;s T-shirts offer timeless style in a range of
-                designs, colors, and textures. From classic to contemporary,
-                find the perfect tee for any occasion.
-              </ListItem>
-              <ListItem href="/pants" title="TROUSERS | PANTS">
-                Explore essential men&apos;s pants for all occasions. From
-                classic chinos to modern joggers, find your perfect fit in a
-                variety of styles and colors.
-              </ListItem>
-              <ListItem href="/sweatshirts" title="SWEATERS | JERSEYS">
-                Much like the T-shirt, men&apos;s sweatshirts are far more than
-                a basic.
-              </ListItem>
+              {categories.map((category) => (
+                <ListItem
+                  key={category.id}
+                  href={`/${category.slug}`}
+                  title={category.name.toUpperCase()}
+                >
+                  Explore our {category.name.toLowerCase()} collection.
+                </ListItem>
+              ))}
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
@@ -57,6 +53,7 @@ export function LinksDesktop() {
     </NavigationMenu>
   );
 }
+
 
 const ListItem = forwardRef<
   React.ElementRef<"a">,

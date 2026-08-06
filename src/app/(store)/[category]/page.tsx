@@ -1,17 +1,17 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import { getCategoryProducts } from "@/app/actions";
+import {
+  getCategoryProducts,
+  getCollections,
+  getCollectionBySlug,
+} from "@/app/actions";
 import {
   ProductsSkeleton,
   GridProducts,
   ProductItem,
 } from "@/components/products";
-import {
-  type ProductCategory,
-  ProductCategoryZod,
-} from "@/lib/db/drizzle/schema";
-import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
+import type { ProductCategory } from "@/lib/db/drizzle/schema";
 
 interface Props {
   params: Promise<{
@@ -19,30 +19,25 @@ interface Props {
   }>;
 }
 
-export function generateStaticParams() {
-  return [
-    { category: "t-shirts" },
-    { category: "pants" },
-    { category: "sweatshirts" },
-  ];
+export async function generateStaticParams() {
+  const collections = await getCollections();
+  return collections.map((collection) => ({ category: collection.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
   const { category } = await params;
-  const parsedCategory = ProductCategoryZod.safeParse(category);
+  const collection = await getCollectionBySlug(category);
 
-  if (!parsedCategory.success) {
+  if (!collection) {
     return {
       title: "Category | Ecommerce Template",
       description: "Browse the catalog by category.",
     };
   }
 
-  const capitalizedCategory = capitalizeFirstLetter(parsedCategory.data);
-
   return {
-    title: `${capitalizedCategory} | Ecommerce Template`,
-    description: `${capitalizedCategory} category at Ecommerce Template by Marcos Camara`,
+    title: `${collection.name} | Ecommerce Template`,
+    description: `${collection.name} category at Ecommerce Template by Marcos Camara`,
   };
 }
 
@@ -52,13 +47,13 @@ async function DynamicCategoryContent({
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-  const parsedCategory = ProductCategoryZod.safeParse(category);
+  const collection = await getCollectionBySlug(category);
 
-  if (!parsedCategory.success) {
+  if (!collection) {
     notFound();
   }
 
-  return <CategoryProducts category={parsedCategory.data} />;
+  return <CategoryProducts category={collection.slug} />;
 }
 
 const CategoryPage = async ({ params }: Props) => {

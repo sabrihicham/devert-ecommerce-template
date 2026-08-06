@@ -7,6 +7,7 @@ import {
   varchar,
   text,
   decimal,
+  boolean,
   timestamp,
   bigint,
   unique,
@@ -16,17 +17,15 @@ import {
   pgPolicy,
 } from "drizzle-orm/pg-core";
 import { anonRole } from "drizzle-orm/supabase";
+import { collections } from "./collections";
 
 // Enums
-export const productCategoryEnum = pgEnum("product_category", [
-  "t-shirts",
-  "pants",
-  "sweatshirts",
-]);
-
 export const sizesEnum = pgEnum("sizes", ["XS", "S", "M", "L", "XL", "XXL"]);
 
-export const ProductCategoryZod = z.enum(["t-shirts", "pants", "sweatshirts"]);
+export const ProductCategoryZod = z
+  .string()
+  .trim()
+  .min(1, "Category is required");
 export const ProductSizeZod = z.enum(["XS", "S", "M", "L", "XL", "XXL"]);
 
 // Tables
@@ -37,8 +36,14 @@ export const productsItems = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description").notNull(),
     price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-    category: productCategoryEnum("category").notNull(),
+    category: varchar("category", { length: 100 })
+      .notNull()
+      .references(() => collections.slug, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
     img: varchar("img", { length: 500 }).notNull(),
+    isFeatured: boolean("is_featured").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
@@ -47,6 +52,7 @@ export const productsItems = pgTable(
     index("idx_products_name").on(table.name),
     index("idx_products_created_at").on(table.createdAt),
     index("idx_products_updated_at").on(table.updatedAt),
+    index("idx_products_is_featured").on(table.isFeatured),
     check("price_positive", sql`price > 0`),
     pgPolicy("Backend can manage products", {
       as: "permissive",
@@ -71,7 +77,6 @@ export const productsVariants = pgTable(
     productId: bigint("product_id", { mode: "number" })
       .notNull()
       .references(() => productsItems.id, { onDelete: "cascade" }),
-    stripeId: varchar("stripe_id", { length: 255 }).notNull().unique(),
     color: varchar("color", { length: 100 }).notNull(),
     sizes: sizesEnum("sizes").array().notNull(),
     images: text("images").array().notNull(),
@@ -81,7 +86,6 @@ export const productsVariants = pgTable(
   (table) => [
     unique("product_color_unique").on(table.productId, table.color),
     index("idx_variants_product_id").on(table.productId),
-    index("idx_variants_stripe_id").on(table.stripeId),
     index("idx_variants_color").on(table.color),
     index("idx_variants_created_at").on(table.createdAt),
     index("idx_variants_updated_at").on(table.updatedAt),
@@ -113,6 +117,7 @@ export const insertProductSchema = createInsertSchema(productsItems, {
   description: z.string().min(1, "Description is required"),
   price: z.coerce.number().positive("Price must be greater than 0"),
   img: z.string().url("Must be a valid URL"),
+  isFeatured: z.coerce.boolean().default(false),
 }).omit({
   id: true,
   createdAt: true,
@@ -130,7 +135,6 @@ export const selectVariantSchema = createSelectSchema(productsVariants, {
 });
 
 export const insertVariantSchema = createInsertSchema(productsVariants, {
-  stripeId: z.string().min(1, "Stripe ID is required"),
   color: z.string().min(1, "Color is required"),
 }).omit({
   id: true,

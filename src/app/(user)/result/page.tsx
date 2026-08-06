@@ -1,11 +1,10 @@
 import { Suspense } from "react";
 
-import { fetchCheckoutData } from "@/services/stripe.service";
+import { getOrderByNumber } from "@/services/orders.service";
 import { pickFirst } from "@/utils/pickFirst";
 import {
   ResultSkeleton,
   NoSessionError,
-  StatusContent,
   SuccessHeader,
   OrderInfo,
   EmailConfirmation,
@@ -15,36 +14,28 @@ import {
 
 export async function generateMetadata() {
   return {
-    title: "Purchase Result | Ecommerce Template",
-    description: "Result of your purchase in Ecommerce Template by Marcos Camara",
+    title: "Order Result | Ecommerce Template",
+    description: "Result of your order in Ecommerce Template.",
   };
 }
 
 type Props = {
-  searchParams: Promise<{ session_id: string | undefined }>;
+  searchParams: Promise<{ orderNumber: string | undefined }>;
 };
 
-async function CheckoutResult({ sessionId }: { sessionId: string }) {
-  const result = await fetchCheckoutData(sessionId);
+async function CheckoutResult({ orderNumber }: { orderNumber: number }) {
+  const order = await getOrderByNumber(orderNumber);
 
-  if (result.status !== "success") {
-    return (
-      <StatusContent
-        status={result.status}
-        sessionId={sessionId}
-        error={result.error}
-      />
-    );
+  if (!order) {
+    return <NoSessionError />;
   }
-
-  const { session } = result;
 
   return (
     <>
       <SuccessHeader />
       <OrderInfo />
-      {session?.customer_details?.email && (
-        <EmailConfirmation email={session.customer_details.email} />
+      {order.customerInfo?.email && (
+        <EmailConfirmation email={order.customerInfo.email} />
       )}
       <DeliveryTimeline />
       <ActionButtons />
@@ -55,18 +46,19 @@ async function CheckoutResult({ sessionId }: { sessionId: string }) {
 async function DynamicCheckoutContent({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id: string | undefined }>;
+  searchParams: Promise<{ orderNumber: string | undefined }>;
 }) {
   const params = await searchParams;
-  const sessionId = pickFirst(params, "session_id");
+  const orderNumberParam = pickFirst(params, "orderNumber");
+  const orderNumber = orderNumberParam ? Number(orderNumberParam) : NaN;
 
-  if (!sessionId) {
+  if (!orderNumberParam || Number.isNaN(orderNumber)) {
     return <NoSessionError />;
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <CheckoutResult sessionId={sessionId} />
+      <CheckoutResult orderNumber={orderNumber} />
     </div>
   );
 }
@@ -80,3 +72,4 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     </section>
   );
 }
+

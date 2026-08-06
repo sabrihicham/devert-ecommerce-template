@@ -20,22 +20,26 @@ export async function proxy(request: NextRequest) {
   // Admin route restriction
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   if (isAdminRoute) {
-    const adminEmail = process.env.ADMIN_EMAIL;
-
-    // If no admin email is configured, deny access
-    if (!adminEmail) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
-
     // Get the session using better-auth API
     const session = await auth.api.getSession({
       headers: request.headers,
     });
 
-    // If no session or email doesn't match admin email, redirect to home
-    if (!session?.user || session.user.email !== adminEmail) {
+    if (!session?.user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+
+    const role = (session.user as { role?: string }).role;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    // ADMIN_EMAIL is kept as a bootstrap fallback (self-healed to role="admin"
+    // in the DB by verifyAdmin() on the first authorized API call) so a fresh
+    // deploy still grants access before the role has been persisted.
+    const isAdmin =
+      role === "admin" || (!!adminEmail && session.user.email === adminEmail);
+
+    if (!isAdmin) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);

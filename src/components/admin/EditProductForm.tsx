@@ -5,9 +5,11 @@ import { ProductForm } from "./ProductForm";
 import { revalidateProducts } from "@/app/actions";
 import type { ProductWithVariants, ProductSize } from "@/lib/db/drizzle/schema";
 import type { ProductFormData } from "@/types/admin";
+import type { CategoryOption } from "./BasicInfo";
 
 interface EditProductFormProps {
   product: ProductWithVariants;
+  categories: CategoryOption[];
 }
 
 function mapProductToFormData(product: ProductWithVariants): ProductFormData {
@@ -18,19 +20,19 @@ function mapProductToFormData(product: ProductWithVariants): ProductFormData {
       description: product.description,
       price: product.price,
       category: product.category,
+      isFeatured: product.isFeatured,
     },
     mainImageUrl: product.img,
     variants: product.variants.map((variant) => ({
       id: variant.id,
       color: variant.color,
-      stripeId: variant.stripeId,
       sizes: variant.sizes as ProductSize[],
       images: variant.images,
     })),
   };
 }
 
-export function EditProductForm({ product }: EditProductFormProps) {
+export function EditProductForm({ product, categories }: EditProductFormProps) {
   const router = useRouter();
 
   const handleSuccess = async (updatedProduct: ProductWithVariants) => {
@@ -41,6 +43,7 @@ export function EditProductForm({ product }: EditProductFormProps) {
   return (
     <ProductForm
       mode="edit"
+      categories={categories}
       initialData={mapProductToFormData(product)}
       onSuccess={handleSuccess}
     />

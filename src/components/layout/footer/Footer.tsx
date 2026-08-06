@@ -1,6 +1,7 @@
 import Link from "next/link";
+import type { Collection } from "@/lib/db/drizzle/schema";
 
-export const Footer = () => {
+export const Footer = ({ categories }: { categories: Collection[] }) => {
   const linkStyles = "text-sm transition duration-150 ease hover:text-white";
   const liStyles = "text-color-secondary my-1.5";
 
@@ -10,21 +11,13 @@ export const Footer = () => {
         <div className="w-full max-w-xs">
           <h2 className="my-3 text-sm font-medium">Products</h2>
           <ul className="grid grid-cols-2">
-            <li className={liStyles}>
-              <Link href="/t-shirts" className={linkStyles}>
-                T-shirts
-              </Link>
-            </li>
-            <li className={liStyles}>
-              <Link href="/pants" className={linkStyles}>
-                Pants
-              </Link>
-            </li>
-            <li className={liStyles}>
-              <Link href="/sweatshirts" className={linkStyles}>
-                Sweatshirts
-              </Link>
-            </li>
+            {categories.map((category) => (
+              <li key={category.id} className={liStyles}>
+                <Link href={`/${category.slug}`} className={linkStyles}>
+                  {category.name}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
         <div className="w-full max-w-xs">

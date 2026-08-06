@@ -14,11 +14,11 @@ export function SuccessHeader() {
     <div className="p-6 border border-solid rounded-lg bg-background-secondary border-border-primary">
       <div className="flex items-center gap-3 mb-3">
         <HiOutlineCheckCircle className="w-8 h-8" />
-        <h1 className="text-2xl font-bold sm:text-3xl">Payment Successful!</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Order Placed!</h1>
       </div>
       <p className="text-sm text-muted-foreground">
-        Thank you for your purchase. Your order has been confirmed and will be
-        processed shortly.
+        Thank you for your order. Pay in cash when it arrives at your
+        doorstep.
       </p>
     </div>
   );

@@ -24,22 +24,22 @@ import { useAuthMutation } from "@/hooks/auth/useAuthMutation";
 /** ICONS */
 import { FiUser, FiMenu, FiCreditCard } from "react-icons/fi";
 import { RiLogoutBoxLine } from "react-icons/ri";
+import type { Collection } from "@/lib/db/drizzle/schema";
 
 const EditProfile = dynamic(() => import("./EditProfile"), {
   ssr: false,
 });
 
-export const Navbar = () => {
+export const Navbar = ({ categories }: { categories: Collection[] }) => {
   const { data: session, isPending } = useSession();
 
   const editProfileManager = useManager();
   const { signOut } = useAuthMutation();
 
-  const linksData = [
-    { path: "/t-shirts", name: "T-SHIRTS" },
-    { path: "/pants", name: "PANTS" },
-    { path: "/sweatshirts", name: "SWEATSHIRTS" },
-  ];
+  const linksData = categories.map((category) => ({
+    path: `/${category.slug}`,
+    name: category.name.toUpperCase(),
+  }));
 
   return (
     <>
@@ -191,7 +191,7 @@ export const Navbar = () => {
             </li>
           )}
           <li>
-            <LinksDesktop />
+            <LinksDesktop categories={categories} />
           </li>
         </ul>
 

@@ -31,7 +31,6 @@ export const cartItems = pgTable(
     variantId: bigint("variant_id", { mode: "number" }).notNull(),
     quantity: integer("quantity").notNull().default(1),
     size: sizesEnum("size").notNull(),
-    stripeId: text("stripe_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
@@ -101,7 +100,6 @@ export const selectCartItemSchema = createSelectSchema(cartItems, {
 
 export const insertCartItemSchema = createInsertSchema(cartItems, {
   quantity: z.number().int().positive("Quantity must be greater than 0"),
-  stripeId: z.string().min(1, "Stripe ID is required"),
   size: ProductSizeZod,
 }).omit({
   id: true,
@@ -120,7 +118,6 @@ export const minimalCartItemSchema = z.object({
   variantId: z.number(),
   size: ProductSizeZod,
   quantity: z.number().int().positive("Quantity must be greater than 0"),
-  stripeId: z.string().min(1, "Stripe ID is required"),
 });
 
 export const cartItemWithDetailsSchema = selectCartItemSchema.extend({

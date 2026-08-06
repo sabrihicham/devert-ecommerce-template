@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { FiCheck, FiX, FiPackage, FiImage, FiLayers } from "react-icons/fi";
-import { BasicInfo, type BasicInfoRef } from "./BasicInfo";
+import { BasicInfo, type BasicInfoRef, type CategoryOption } from "./BasicInfo";
 import { MainImage, type MainImageRef } from "./MainImage";
 import { VariantsSection, type VariantsSectionRef } from "./VariantsSection";
 import type { ProductWithVariants } from "@/lib/db/drizzle/schema";
@@ -31,12 +31,14 @@ interface FormState {
 interface ProductFormProps {
   mode: "create" | "edit";
   initialData?: ProductFormData;
+  categories: CategoryOption[];
   onSuccess?: (product: ProductWithVariants) => void;
 }
 
 export function ProductForm({
   mode,
   initialData,
+  categories,
   onSuccess,
 }: ProductFormProps) {
   const { createAsync, updateAsync, isPending, isUpdatePending } =
@@ -66,6 +68,7 @@ export function ProductForm({
     formData.append("description", basicInfoRef.current.description);
     formData.append("price", basicInfoRef.current.price);
     formData.append("category", basicInfoRef.current.category);
+    formData.append("isFeatured", String(basicInfoRef.current.isFeatured));
 
     // Handle main image
     if (mainImageRef.current.hasNewImage && mainImageRef.current.file) {
@@ -92,7 +95,6 @@ export function ProductForm({
     const variantsForSubmit = variantsData.map((v) => ({
       id: v.id,
       color: v.color,
-      stripe_id: v.stripe_id,
       sizes: v.sizes,
       imageCount: v.imageCount,
       existingImages: v.existingImages,
@@ -188,6 +190,7 @@ export function ProductForm({
             ref={basicInfoRef}
             errors={state.errors}
             initialData={initialData?.basicInfo}
+            categories={categories}
           />
         </CardContent>
       </Card>

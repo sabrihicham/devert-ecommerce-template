@@ -14,13 +14,7 @@ export const routes = {
   
   // User routes
   cart: "/(user)/cart",
-  wishlist: "/(user)/wishlist",
-  orders: "/(user)/orders",
-  orderDetail: (id: string | number) => `/(user)/orders/${id}`,
-  profile: "/(user)/profile",
-  
-  // Admin routes
-  admin: "/admin",
+  checkout: "/(user)/checkout",
   createProduct: "/admin/products/create",
   
   // API routes
@@ -32,7 +26,6 @@ export const routes = {
     products: "/api/v1/products",
     users: "/api/v1/users",
     search: "/api/v1/search",
-    stripe: "/api/v1/stripe",
   },
 };
 

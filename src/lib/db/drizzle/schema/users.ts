@@ -7,8 +7,12 @@ import {
   timestamp,
   boolean,
   index,
+  pgEnum,
   pgPolicy,
 } from "drizzle-orm/pg-core";
+
+export const userRoleEnum = pgEnum("user_role", ["customer", "admin"]);
+export const UserRoleZod = z.enum(["customer", "admin"]);
 
 export const users = pgTable(
   "user",
@@ -18,12 +22,14 @@ export const users = pgTable(
     email: text("email").notNull().unique(),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
+    role: userRoleEnum("role").notNull().default("customer"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index("idx_user_email").on(table.email),
     index("idx_user_created_at").on(table.createdAt),
+    index("idx_user_role").on(table.role),
     pgPolicy("Backend can manage auth users", {
       as: "permissive",
       for: "all",
