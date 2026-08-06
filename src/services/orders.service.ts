@@ -41,6 +41,18 @@ export async function getOrderByNumber(
   }
 }
 
+export async function getOrderByNumberAndRef(
+  orderNumber: number,
+  orderRef: string,
+): Promise<OrderWithDetails | null> {
+  try {
+    return await ordersRepository.findByOrderNumberAndRef(orderNumber, orderRef);
+  } catch (error) {
+    console.error("Error fetching protected order by number:", error);
+    return null;
+  }
+}
+
 export async function createCompleteOrder(
   orderData: CreateOrderItemInput,
   customerData: Omit<InsertCustomerInfo, "orderId">,
@@ -60,6 +72,15 @@ export async function createCompleteOrder(
 
 export async function getAdminOrders(filter: AdminOrdersFilter = {}) {
   return ordersRepository.findAllForAdmin(filter);
+}
+
+export async function getAdminDashboardSummary() {
+  try {
+    return await ordersRepository.getDashboardSummary();
+  } catch (error) {
+    console.error("Error fetching admin dashboard summary:", error);
+    return null;
+  }
 }
 
 export async function updateOrderStatus(
@@ -88,4 +109,3 @@ export async function countPriorOrderIssues(
     return 0;
   }
 }
-

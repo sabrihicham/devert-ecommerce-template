@@ -2,7 +2,7 @@
 
 export interface Order {
   id: number;
-  userId: string;
+  userId?: string;
   orderNumber: number;
   items: OrderLineItem[];
   customer: CustomerDetails;

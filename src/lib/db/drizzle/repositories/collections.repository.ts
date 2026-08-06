@@ -35,6 +35,12 @@ function transformCollection(
     id: row.id,
     name: row.name,
     slug: row.slug,
+    imageUrl: row.imageUrl,
+    mobileImageUrl: row.mobileImageUrl,
+    description: row.description,
+    isFeatured: row.isFeatured,
+    isVisible: row.isVisible,
+    displayOrder: row.displayOrder,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -45,7 +51,7 @@ export const collectionsRepository = {
     const rows = await db
       .select()
       .from(collections)
-      .orderBy(asc(collections.name));
+      .orderBy(asc(collections.displayOrder), asc(collections.name));
     return rows.map(transformCollection);
   },
 

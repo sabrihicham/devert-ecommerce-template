@@ -28,6 +28,8 @@ export {
 // Products
 export {
   sizesEnum,
+  productStatusEnum,
+  ProductStatusZod,
   ProductCategoryZod,
   ProductSizeZod,
   productsItems,
@@ -118,15 +120,19 @@ export {
 // Store settings
 export {
   storeSettings,
+  BrandThemeZod,
   selectStoreSettingsSchema,
   updateStoreSettingsSchema,
   type StoreSettings,
+  type BrandTheme,
   type UpdateStoreSettingsInput,
 } from "./settings";
 
 // Homepage banners
 export {
   homepageBanners,
+  bannerPlacementEnum,
+  BannerPlacementZod,
   selectBannerSchema,
   insertBannerSchema,
   updateBannerSchema,

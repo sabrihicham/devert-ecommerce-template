@@ -5,6 +5,7 @@ import type {
   InsertProduct,
   InsertProductVariant,
   ProductCategory,
+  VariantWithProduct,
 } from "@/lib/db/drizzle/schema";
 
 export async function getAllProducts(): Promise<ProductWithVariants[]> {
@@ -13,6 +14,17 @@ export async function getAllProducts(): Promise<ProductWithVariants[]> {
   } catch (error) {
     console.error("Error fetching products:", error);
     return [];
+  }
+}
+
+export async function getVariantWithProduct(
+  variantId: number,
+): Promise<VariantWithProduct | null> {
+  try {
+    return await productsRepository.findVariantWithProduct(variantId);
+  } catch (error) {
+    console.error("Error fetching product variant:", error);
+    return null;
   }
 }
 

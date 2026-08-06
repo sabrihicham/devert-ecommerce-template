@@ -7,11 +7,17 @@ import {
   text,
   integer,
   boolean,
+  bigint,
+  pgEnum,
   timestamp,
   index,
   pgPolicy,
 } from "drizzle-orm/pg-core";
 import { anonRole } from "drizzle-orm/supabase";
+import { productsItems } from "./products";
+
+export const bannerPlacementEnum = pgEnum("banner_placement", ["hero", "promo_primary", "promo_secondary", "limited_offer"]);
+export const BannerPlacementZod = z.enum(["hero", "promo_primary", "promo_secondary", "limited_offer"]);
 
 export const homepageBanners = pgTable(
   "homepage_banners",
@@ -21,6 +27,12 @@ export const homepageBanners = pgTable(
     title: text("title"),
     subtitle: text("subtitle"),
     linkUrl: text("link_url"),
+    mobileImageUrl: text("mobile_image_url"),
+    buttonLabel: text("button_label"),
+    placement: bannerPlacementEnum("placement").notNull().default("hero"),
+    productId: bigint("product_id", { mode: "number" }).references(() => productsItems.id, { onDelete: "set null" }),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
     sortOrder: integer("sort_order").notNull().default(0),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -33,6 +45,7 @@ export const homepageBanners = pgTable(
   (table) => [
     index("idx_homepage_banners_sort_order").on(table.sortOrder),
     index("idx_homepage_banners_is_active").on(table.isActive),
+    index("idx_homepage_banners_placement_active").on(table.placement, table.isActive, table.sortOrder),
     pgPolicy("Backend can manage homepage banners", {
       as: "permissive",
       for: "all",
@@ -65,6 +78,12 @@ export const insertBannerSchema = createInsertSchema(homepageBanners, {
     .nullable()
     .optional(),
   linkUrl: z.string().trim().url("Must be a valid URL").nullable().optional(),
+  mobileImageUrl: z.string().url().nullable().optional(),
+  buttonLabel: z.string().trim().max(48).nullable().optional(),
+  placement: BannerPlacementZod.default("hero"),
+  productId: z.coerce.number().int().positive().nullable().optional(),
+  startsAt: z.coerce.date().nullable().optional(),
+  endsAt: z.coerce.date().nullable().optional(),
   sortOrder: z.coerce.number().int().default(0),
   isActive: z.coerce.boolean().default(true),
 }).omit({

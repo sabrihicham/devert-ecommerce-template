@@ -5,6 +5,7 @@ import { revalidateCollections } from "@/app/actions";
 import { collectionsRepository } from "@/lib/db/drizzle/repositories";
 import { updateCollectionSchema } from "@/lib/db/drizzle/schema";
 import { verifyAdmin } from "@/utils/admin";
+import { collectionFields, deleteCategoryImage, uploadCategoryImage } from "../shared";
 
 const collectionIdSchema = z.coerce.number().int().positive();
 
@@ -29,8 +30,10 @@ export async function PUT(
       );
     }
 
-    const body = await request.json().catch(() => null);
-    const fields = updateCollectionSchema.parse(body);
+    const formData = await request.formData();
+    const image = formData.get("image");
+    const uploadedImage = image instanceof File && image.size ? await uploadCategoryImage(image) : null;
+    const fields = updateCollectionSchema.parse({ ...collectionFields(formData), imageUrl: uploadedImage ?? existing.imageUrl });
 
     const updated = await collectionsRepository.update(id, fields);
 
@@ -42,6 +45,7 @@ export async function PUT(
     }
 
     await revalidateCollections();
+    if (uploadedImage && existing.imageUrl !== uploadedImage) await deleteCategoryImage(existing.imageUrl).catch(() => undefined);
 
     return NextResponse.json({
       success: true,

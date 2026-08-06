@@ -1,16 +1,30 @@
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
+import { Alexandria, Montserrat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
+import { Suspense } from "react";
+import Script from "next/script";
 
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
+import { StoreChrome } from "@/components/layout/StoreChrome";
 import { Providers } from "@/providers";
-import { getCollections } from "@/app/actions";
 import "@/styles/globals.css";
 import "@/styles/colors.css";
 import "@/styles/animations.css";
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const alexandria = Alexandria({
+  subsets: ["arabic", "latin"],
+  variable: "--font-alexandria",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
 
 const defaultDescription =
   "Modern ecommerce template built with Next.js 16, React 19, Drizzle, Better Auth, Supabase, and cash-on-delivery checkout.";
@@ -47,20 +61,31 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const categories = await getCollections();
-
   return (
-    <html lang="en">
-      <body className={GeistSans.className}>
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <body className={`${montserrat.variable} ${alexandria.variable}`}>
+        <Script id="restore-store-brand" strategy="beforeInteractive">{`
+            try {
+              var theme = localStorage.getItem("theme");
+              var dark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+              document.documentElement.classList.toggle("dark", dark);
+              var brand = localStorage.getItem("store-brand-theme");
+              if (brand === "performance" || brand === "endurance" || brand === "energy") {
+                document.documentElement.dataset.brand = brand;
+              }
+            } catch (error) {} finally {
+              document.documentElement.dataset.themeReady = "true";
+            }
+          `}</Script>
         <Providers>
-          <Navbar categories={categories} />
-          <main className="pointer-events-auto mx-auto w-full max-w-[1920px]">
-            {children}
+          <Suspense fallback={<main className="min-h-screen" />}>
+            <StoreChrome><main className="pointer-events-auto mx-auto w-full max-w-[1920px]">{children}</main></StoreChrome>
+          </Suspense>
+          <div>
             <Toaster position="bottom-right" />
             <Analytics />
             <SpeedInsights />
-          </main>
-          <Footer categories={categories} />
+          </div>
         </Providers>
       </body>
     </html>

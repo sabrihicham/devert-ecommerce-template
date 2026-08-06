@@ -5,6 +5,7 @@ import { revalidateCollections } from "@/app/actions";
 import { collectionsRepository } from "@/lib/db/drizzle/repositories";
 import { insertCollectionSchema } from "@/lib/db/drizzle/schema";
 import { verifyAdmin } from "@/utils/admin";
+import { collectionFields, uploadCategoryImage } from "./shared";
 
 export async function GET(request: NextRequest) {
   const admin = await verifyAdmin(request);
@@ -23,8 +24,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => null);
-    const fields = insertCollectionSchema.parse(body);
+    const formData = await request.formData();
+    const image = formData.get("image");
+    const uploadedImage = image instanceof File && image.size ? await uploadCategoryImage(image) : null;
+    const fields = insertCollectionSchema.parse({ ...collectionFields(formData), imageUrl: uploadedImage });
 
     const collection = await collectionsRepository.create(fields);
 

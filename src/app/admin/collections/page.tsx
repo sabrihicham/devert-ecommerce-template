@@ -4,7 +4,7 @@ import { CollectionsList } from "@/components/admin/CollectionsList";
 
 export async function generateMetadata() {
   return {
-    title: "Collections | Admin",
+    title: "Categories | Admin",
   };
 }
 

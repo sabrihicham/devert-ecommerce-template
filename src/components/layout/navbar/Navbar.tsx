@@ -2,6 +2,7 @@
 
 /** COMPONENTS */
 import Link from "next/link";
+import Image from "next/image";
 import { LinksDesktop } from "./LinksDesktop";
 import { UserMenu } from "./UserMenu";
 import { SearchInput } from "./SearchInput";
@@ -16,61 +17,77 @@ import { WishlistLink } from "./WishlistLink";
 import { CartLink } from "./CartLink";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 /** FUNCTIONALITY */
 import { useSession } from "@/lib/auth/client";
 import { useManager } from "@/hooks/useManager";
 import dynamic from "next/dynamic";
 import { useAuthMutation } from "@/hooks/auth/useAuthMutation";
 /** ICONS */
-import { FiUser, FiMenu, FiCreditCard } from "react-icons/fi";
-import { RiLogoutBoxLine } from "react-icons/ri";
+import { Menu, User, ReceiptText, LogOut } from "lucide-react";
 import type { Collection } from "@/lib/db/drizzle/schema";
 
 const EditProfile = dynamic(() => import("./EditProfile"), {
   ssr: false,
 });
 
-export const Navbar = ({ categories }: { categories: Collection[] }) => {
+export const Navbar = ({ categories, storeName, logoUrl }: { categories: Collection[]; storeName: string; logoUrl: string | null }) => {
   const { data: session, isPending } = useSession();
 
   const editProfileManager = useManager();
   const { signOut } = useAuthMutation();
 
-  const linksData = categories.map((category) => ({
-    path: `/${category.slug}`,
-    name: category.name.toUpperCase(),
-  }));
+  const linksData = categories
+    .filter((category) => category.isVisible)
+    .map((category) => ({
+      ...category,
+      path: `/${category.slug}`,
+    }));
 
   return (
     <>
-      <header className="pointer-events-auto w-full px-3.5 gap-4 xs:px-6 sm:px-12 py-6 flex items-center justify-between bg-background-secondary border-b border-solid border-border-primary">
+      <header className="sticky top-0 z-40 flex w-full items-center justify-between gap-3 border-b border-border/80 bg-background/90 px-3.5 py-3 backdrop-blur-lg xs:px-6 sm:px-8">
+        <Link href="/" className="order-2 shrink-0 text-lg font-black text-foreground lg:order-none">{logoUrl ? <Image src={logoUrl} alt={storeName} width={120} height={40} className="h-10 w-auto object-contain" priority/> : storeName}</Link>
         {/* Mobile Menu Trigger */}
         <Sheet>
           <SheetTrigger asChild>
             <button className="flex px-4 py-2 lg:hidden hover:opacity-75 transition-opacity">
-              <FiMenu size={24} />
+              <Menu size={22} />
             </button>
           </SheetTrigger>
 
-          <SheetContent side="left" className="w-full sm:w-80 p-0">
+          <SheetContent side="right" className="w-full p-0 sm:w-80">
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="px-6 py-4 border-b border-border-primary">
-                <SheetTitle className="text-lg font-semibold">Menu</SheetTitle>
+                <SheetTitle className="text-lg font-semibold">القائمة</SheetTitle>
               </div>
 
               {/* Navigation Links */}
               <nav className="flex-1 overflow-y-auto">
                 <ul className="flex flex-col gap-2 p-4">
                   {/* Category Links */}
-                  {linksData.map((link, index) => (
-                    <li key={index}>
+                  {linksData.map((link) => (
+                    <li key={link.id}>
                       <SheetClose asChild>
                         <Link
                           href={link.path}
-                          className="flex items-center px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
+                          className="group relative flex min-h-16 items-center gap-3 overflow-hidden rounded-xl border border-border/70 bg-muted/50 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-muted"
                         >
-                          {link.name}
+                          {link.imageUrl && (
+                            <span
+                              className="size-11 shrink-0 rounded-lg bg-cover bg-center"
+                              style={{ backgroundImage: `url(${link.imageUrl})` }}
+                              aria-hidden="true"
+                            />
+                          )}
+                          <span className="min-w-0">
+                            <span className="block text-sm font-bold">{link.name}</span>
+                            <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                              {link.description || "اكتشف التشكيلة"}
+                            </span>
+                          </span>
+                          <span className="ms-auto text-primary transition-transform group-hover:-translate-x-1">←</span>
                         </Link>
                       </SheetClose>
                     </li>
@@ -117,8 +134,8 @@ export const Navbar = ({ categories }: { categories: Collection[] }) => {
                             href="/orders"
                             className="flex items-center px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
                           >
-                            <FiCreditCard className="mr-2" size={16} />
-                            <span>View orders</span>
+                            <ReceiptText className="ms-2" size={16} />
+                            <span>طلباتي</span>
                           </Link>
                         </SheetClose>
                       </li>
@@ -129,8 +146,8 @@ export const Navbar = ({ categories }: { categories: Collection[] }) => {
                             onClick={editProfileManager.open}
                             className="flex items-center w-full px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
                           >
-                            <FiUser className="mr-2" size={16} />
-                            <span>Edit profile</span>
+                            <User className="ms-2" size={16} />
+                            <span>الملف الشخصي</span>
                           </button>
                         </SheetClose>
                       </li>
@@ -144,8 +161,8 @@ export const Navbar = ({ categories }: { categories: Collection[] }) => {
                           onClick={() => signOut.mutate()}
                           className="flex gap-2 items-center w-full px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
                         >
-                          <RiLogoutBoxLine size={16} />
-                          <span>Log out</span>
+                          <LogOut size={16} />
+                          <span>تسجيل الخروج</span>
                         </button>
                       </li>
                     </>
@@ -159,7 +176,7 @@ export const Navbar = ({ categories }: { categories: Collection[] }) => {
                           href="/login"
                           className="flex items-center px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
                         >
-                          Login
+                            تسجيل الدخول
                         </Link>
                       </SheetClose>
                     </li>
@@ -184,9 +201,9 @@ export const Navbar = ({ categories }: { categories: Collection[] }) => {
             <li className="flex items-center justify-center">
               <Link
                 href="/login"
-                className="w-24 h-9 text-sm flex items-center justify-center text-color-secondary transition-all hover:text-white font-medium"
+                className="flex h-10 items-center justify-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
               >
-                Login
+                تسجيل الدخول
               </Link>
             </li>
           )}
@@ -200,6 +217,7 @@ export const Navbar = ({ categories }: { categories: Collection[] }) => {
 
         {/* Cart and Wishlist Buttons */}
         <ul className="flex gap-2">
+          <li className="flex items-center justify-center"><ThemeToggle /></li>
           <li className="flex items-center justify-center">
             <CartLink />
           </li>

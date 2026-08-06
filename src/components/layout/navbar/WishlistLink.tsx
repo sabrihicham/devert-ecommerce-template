@@ -6,7 +6,7 @@ import { useWishlist } from "@/hooks/wishlist";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 /** ICONS */
-import { MdFavorite } from "react-icons/md";
+import { Heart } from "lucide-react";
 
 export const WishlistLink = () => {
   const { items: wishlistProducts, isFetching } = useWishlist();
@@ -18,11 +18,11 @@ export const WishlistLink = () => {
   return (
     <Link
       href="/wishlist"
-      aria-label="Products saved in wishlist"
-      className="text-sm py-3 px-3 rounded-md transition-all text-color-tertiary hover:bg-background-tertiary relative"
+      aria-label="المفضلة"
+      className="relative rounded-lg p-2.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
     >
-      <MdFavorite size={18} />
-      <span className="flex text-xs items-center bg-[#0072F5] font-medium text-color-tertiary justify-center absolute size-5 rounded-full top-[-3px] right-[-3px]">
+      <Heart size={18} />
+      <span className="absolute -end-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
         {wishlistProducts.length || 0}
       </span>
     </Link>

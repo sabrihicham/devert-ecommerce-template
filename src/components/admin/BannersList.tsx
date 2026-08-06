@@ -22,6 +22,7 @@ import {
 import { BannerForm } from "./BannerForm";
 import { useBannerMutation } from "@/hooks/admin/banners/useBannerMutation";
 import type { Banner } from "@/lib/db/drizzle/schema";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export function BannersList({ banners }: { banners: Banner[] }) {
   const [items, setItems] = useState(
@@ -31,6 +32,7 @@ export function BannersList({ banners }: { banners: Banner[] }) {
   const [editingBanner, setEditingBanner] = useState<Banner | undefined>();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [reorderingId, setReorderingId] = useState<number | null>(null);
+  const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
 
   const { deleteBannerAsync, reorderAsync } = useBannerMutation();
 
@@ -50,10 +52,6 @@ export function BannersList({ banners }: { banners: Banner[] }) {
   }
 
   async function handleDelete(banner: Banner) {
-    if (!window.confirm(`Delete "${banner.title || "this banner"}"? This cannot be undone.`)) {
-      return;
-    }
-
     setDeletingId(banner.id);
     const ok = await deleteBannerAsync(banner.id);
     setDeletingId(null);
@@ -185,7 +183,7 @@ export function BannersList({ banners }: { banners: Banner[] }) {
                   variant="destructive"
                   size="icon"
                   disabled={deletingId === banner.id}
-                  onClick={() => handleDelete(banner)}
+                  onClick={() => setBannerToDelete(banner)}
                   aria-label="Delete banner"
                 >
                   <FiTrash2 size={16} />
@@ -210,6 +208,7 @@ export function BannersList({ banners }: { banners: Banner[] }) {
           />
         </DialogContent>
       </Dialog>
+      <AlertDialog open={Boolean(bannerToDelete)} onOpenChange={(open) => !open && setBannerToDelete(null)}><AlertDialogContent className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-950"><AlertDialogHeader><AlertDialogTitle className="text-lg font-semibold text-slate-950 dark:text-white">Delete banner?</AlertDialogTitle><AlertDialogDescription className="text-sm text-slate-500">This will permanently remove {bannerToDelete?.title || "this banner"}.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="admin-icon-button px-4">Cancel</AlertDialogCancel><AlertDialogAction className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white" onClick={() => bannerToDelete && handleDelete(bannerToDelete)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </div>
   );
 }

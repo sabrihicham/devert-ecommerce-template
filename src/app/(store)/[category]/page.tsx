@@ -8,8 +8,9 @@ import {
 } from "@/app/actions";
 import {
   ProductsSkeleton,
-  GridProducts,
-  ProductItem,
+  ProductCatalog,
+  getCatalogSort,
+  sortProducts,
 } from "@/components/products";
 import type { ProductCategory } from "@/lib/db/drizzle/schema";
 
@@ -17,6 +18,7 @@ interface Props {
   params: Promise<{
     category: string;
   }>;
+  searchParams: Promise<{ sort?: string }>;
 }
 
 export async function generateStaticParams() {
@@ -43,8 +45,10 @@ export async function generateMetadata({ params }: Props) {
 
 async function DynamicCategoryContent({
   params,
+  sort,
 }: {
   params: Promise<{ category: string }>;
+  sort: ReturnType<typeof getCatalogSort>;
 }) {
   const { category } = await params;
   const collection = await getCollectionBySlug(category);
@@ -53,14 +57,15 @@ async function DynamicCategoryContent({
     notFound();
   }
 
-  return <CategoryProducts category={collection.slug} />;
+  return <CategoryProducts category={collection.slug} title={collection.name} sort={sort} />;
 }
 
-const CategoryPage = async ({ params }: Props) => {
+const CategoryPage = async ({ params, searchParams }: Props) => {
+  const sort = getCatalogSort((await searchParams).sort);
   return (
     <section className="pt-14">
       <Suspense fallback={<ProductsSkeleton items={6} />}>
-        <DynamicCategoryContent params={params} />
+        <DynamicCategoryContent params={params} sort={sort} />
       </Suspense>
     </section>
   );
@@ -68,18 +73,15 @@ const CategoryPage = async ({ params }: Props) => {
 
 const CategoryProducts = async ({
   category,
+  title,
+  sort,
 }: {
   category: ProductCategory;
+  title: string;
+  sort: ReturnType<typeof getCatalogSort>;
 }) => {
   const products = await getCategoryProducts(category);
-
-  return (
-    <GridProducts>
-      {products.map((product) => (
-        <ProductItem key={product.id} product={product} />
-      ))}
-    </GridProducts>
-  );
+  return <ProductCatalog title={title} eyebrow="Collection" products={sortProducts(products, sort)} sort={sort} />;
 };
 
 export default CategoryPage;

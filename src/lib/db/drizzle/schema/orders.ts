@@ -74,7 +74,7 @@ export const orderItems = pgTable(
   "order_items",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    userId: text("user_id").notNull(),
+    userId: text("user_id"),
     deliveryDate: timestamp("delivery_date", { withTimezone: true }).notNull(),
     orderNumber: bigint("order_number", { mode: "number" }).notNull().unique(),
     status: orderStatusEnum("status").notNull().default("pending"),
@@ -214,10 +214,9 @@ export const insertOrderItemSchema = createInsertSchema(orderItems, {
   updatedAt: true,
 });
 
-export const createOrderItemInputSchema = insertOrderItemSchema.pick({
-  userId: true,
-  deliveryDate: true,
-});
+export const createOrderItemInputSchema = insertOrderItemSchema
+  .pick({ userId: true, deliveryDate: true })
+  .extend({ userId: z.string().nullable().optional() });
 
 export const updateOrderStatusSchema = z.object({
   status: OrderStatusZod,

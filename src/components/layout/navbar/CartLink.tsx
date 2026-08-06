@@ -6,7 +6,7 @@ import { useCart } from "@/hooks/cart";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 /** ICONS */
-import { FiShoppingCart } from "react-icons/fi";
+import { ShoppingBag } from "lucide-react";
 
 export const CartLink = () => {
   const { items: cartProducts, isFetching } = useCart();
@@ -23,11 +23,11 @@ export const CartLink = () => {
   return (
     <Link
       href="/cart"
-      aria-label="Products saved in the shopping cart"
-      className="text-sm py-3 px-3 rounded-md transition-all text-color-tertiary hover:bg-background-tertiary relative"
+      aria-label="سلة التسوق"
+      className="relative rounded-lg p-2.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
     >
-      <FiShoppingCart size={16} />
-      <span className="flex text-xs size-5 items-center bg-[#0072F5] font-medium text-color-tertiary justify-center absolute rounded-full top-[-3px] right-[-3px]">
+      <ShoppingBag size={18} />
+      <span className="absolute -end-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
         {totalItemsCart || 0}
       </span>
     </Link>

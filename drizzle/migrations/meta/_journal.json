@@ -57,6 +57,34 @@
       "when": 1775001606000,
       "tag": "0007_collections",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1775001607000,
+      "tag": "0008_guest_direct_orders",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1775001608000,
+      "tag": "0009_store_brand_theme",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1775001609000,
+      "tag": "0010_homepage_commerce",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1775001610000,
+      "tag": "0011_store_logo",
+      "breakpoints": true
     }
   ]
 }

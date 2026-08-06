@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
-import { getOrderByNumber } from "@/services/orders.service";
+import { getOrderByNumber, getOrderByNumberAndRef } from "@/services/orders.service";
+import { getUser } from "@/lib/auth/server";
 import { pickFirst } from "@/utils/pickFirst";
 import {
   ResultSkeleton,
@@ -20,13 +21,16 @@ export async function generateMetadata() {
 }
 
 type Props = {
-  searchParams: Promise<{ orderNumber: string | undefined }>;
+  searchParams: Promise<{ orderNumber: string | undefined; token?: string }>;
 };
 
-async function CheckoutResult({ orderNumber }: { orderNumber: number }) {
-  const order = await getOrderByNumber(orderNumber);
+async function CheckoutResult({ orderNumber, token }: { orderNumber: number; token?: string }) {
+  const user = await getUser();
+  const order = token
+    ? await getOrderByNumberAndRef(orderNumber, token)
+    : await getOrderByNumber(orderNumber);
 
-  if (!order) {
+  if (!order || (!token && (!user || order.userId !== user.id))) {
     return <NoSessionError />;
   }
 
@@ -46,7 +50,7 @@ async function CheckoutResult({ orderNumber }: { orderNumber: number }) {
 async function DynamicCheckoutContent({
   searchParams,
 }: {
-  searchParams: Promise<{ orderNumber: string | undefined }>;
+  searchParams: Promise<{ orderNumber: string | undefined; token?: string }>;
 }) {
   const params = await searchParams;
   const orderNumberParam = pickFirst(params, "orderNumber");
@@ -58,7 +62,7 @@ async function DynamicCheckoutContent({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <CheckoutResult orderNumber={orderNumber} />
+      <CheckoutResult orderNumber={orderNumber} token={params.token} />
     </div>
   );
 }
@@ -72,4 +76,3 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     </section>
   );
 }
-

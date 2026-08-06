@@ -149,6 +149,14 @@ export async function getNewArrivals(
   }
 }
 
+export async function getBestSellers(limit: number = 8): Promise<ProductWithVariants[]> {
+  "use cache";
+  cacheTag("products", "best-sellers");
+  cacheLife("hours");
+  try { return productWithVariantsSchema.array().parse(await productsRepository.findBestSellers(limit)); }
+  catch (error) { console.error("Error fetching best sellers:", error); return []; }
+}
+
 /**
  * Fetch active homepage hero-slider banners, ordered for display, with caching.
  */

@@ -29,12 +29,53 @@ export interface AdminOrdersResult {
   pageSize: number;
 }
 
+export interface AdminDashboardSummary {
+  totalOrders: number;
+  pendingOrders: number;
+  deliveredRevenueCents: number;
+  statusCounts: Record<OrderStatus, number>;
+  recentOrders: OrderWithDetails[];
+}
+
 const ORDER_NUMBER_LOCK_NAMESPACE = 42_001;
 const ORDER_NUMBER_LOCK_RESOURCE = 1;
 const MAX_CREATE_COMPLETE_ATTEMPTS = 3;
 const UNIQUE_VIOLATION_CODE = "23505";
 
 export const ordersRepository = {
+  async getDashboardSummary(): Promise<AdminDashboardSummary> {
+    const [aggregate, statuses, recent] = await Promise.all([
+      db
+        .select({
+          totalOrders: count(),
+          pendingOrders: sql<number>`count(*) filter (where ${orderItems.status} = 'pending')`,
+          deliveredRevenueCents: sql<number>`coalesce(sum(case when ${orderItems.status} = 'delivered' then ${customerInfo.totalPrice} else 0 end), 0)`,
+        })
+        .from(orderItems)
+        .leftJoin(customerInfo, eq(customerInfo.orderId, orderItems.id)),
+      db
+        .select({ status: orderItems.status, total: count() })
+        .from(orderItems)
+        .groupBy(orderItems.status),
+      db.query.orderItems.findMany({
+        with: ORDER_WITH_DETAILS,
+        orderBy: [desc(orderItems.createdAt)],
+        limit: 5,
+      }),
+    ]);
+    const statusCounts = Object.fromEntries(
+      ["pending", "confirmed", "no_answer", "out_for_delivery", "delivered", "cancelled", "returned"].map((status) => [status, 0]),
+    ) as Record<OrderStatus, number>;
+    statuses.forEach(({ status, total }) => { statusCounts[status] = Number(total); });
+    return {
+      totalOrders: Number(aggregate[0]?.totalOrders ?? 0),
+      pendingOrders: Number(aggregate[0]?.pendingOrders ?? 0),
+      deliveredRevenueCents: Number(aggregate[0]?.deliveredRevenueCents ?? 0),
+      statusCounts,
+      recentOrders: recent.map(transformOrderWithDetails),
+    };
+  },
+
   async findAllForAdmin(
     filter: AdminOrdersFilter = {},
   ): Promise<AdminOrdersResult> {
@@ -152,6 +193,14 @@ export const ordersRepository = {
     return order ? transformOrderWithDetails(order) : null;
   },
 
+  async findByOrderNumberAndRef(
+    orderNumber: number,
+    orderRef: string,
+  ): Promise<OrderWithDetails | null> {
+    const order = await this.findByOrderNumber(orderNumber);
+    return order?.customerInfo?.orderRef === orderRef ? order : null;
+  },
+
   async createComplete(
     orderData: CreateOrderItemInput,
     customerData: Omit<InsertCustomerInfo, "orderId">,
@@ -264,7 +313,7 @@ const ORDER_WITH_DETAILS = {
 
 function transformOrderWithDetails(row: {
   id: number;
-  userId: string;
+  userId: string | null;
   deliveryDate: Date;
   orderNumber: number;
   status: OrderStatus;

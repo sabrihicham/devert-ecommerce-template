@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,8 @@ export function CollectionForm({
   const [slug, setSlug] = useState(collection?.slug || "");
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState(collection?.imageUrl || null);
 
   const submitting = isPending || isUpdatePending;
 
@@ -56,7 +59,9 @@ export function CollectionForm({
     e.preventDefault();
     setErrors({});
 
-    const data = { name: name.trim(), slug: slugify(slug) };
+    const data = new FormData();
+    data.set("name", name.trim()); data.set("slug", slugify(slug));
+    if (image) data.set("image", image);
 
     const result = isEdit
       ? await updateAsync({ id: collection!.id, data })
@@ -78,7 +83,7 @@ export function CollectionForm({
           htmlFor="collection-name"
           className="text-sm font-medium text-color-secondary"
         >
-          Name <span className="text-red-400">*</span>
+          Category name <span className="text-red-400">*</span>
         </Label>
         <Input
           id="collection-name"
@@ -92,6 +97,15 @@ export function CollectionForm({
         {errors?.name && (
           <p className="text-sm font-medium text-red-400">{errors.name[0]}</p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="category-image" className="text-sm font-medium text-color-secondary">Category image</Label>
+        <div className="flex items-center gap-4 rounded-xl border border-dashed border-border p-3">
+          {preview ? <Image src={preview} alt="Category preview" width={96} height={64} className="h-16 w-24 rounded-lg object-cover"/> : <div className="grid h-16 w-24 place-items-center rounded-lg bg-muted text-xs text-muted-foreground">No image</div>}
+          <Input id="category-image" type="file" accept="image/*" className="max-w-xs" onChange={(event) => { const file = event.target.files?.[0]; if (file) { setImage(file); setPreview(URL.createObjectURL(file)); } }} />
+        </div>
+        <p className="text-xs text-muted-foreground">Upload a landscape image for the storefront category card.</p>
       </div>
 
       <div className="space-y-2">
@@ -132,7 +146,7 @@ export function CollectionForm({
           Cancel
         </Button>
         <LoadingButton type="submit" loading={submitting}>
-          {isEdit ? "Save changes" : "Create collection"}
+          {isEdit ? "Save category" : "Create category"}
         </LoadingButton>
       </div>
     </form>

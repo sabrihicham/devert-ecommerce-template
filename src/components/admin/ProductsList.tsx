@@ -19,6 +19,10 @@ import { useProductMutation } from "@/hooks/product/mutations/useProductMutation
 import { formatPriceFromEuros } from "@/utils/formatters";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import type { ProductWithVariants, Collection } from "@/lib/db/drizzle/schema";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function ProductsList({
   products,
@@ -31,6 +35,7 @@ export function ProductsList({
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [productToDelete, setProductToDelete] = useState<ProductWithVariants | null>(null);
 
   const { deleteProductAsync } = useProductMutation();
 
@@ -44,10 +49,6 @@ export function ProductsList({
   }, [items, search, category]);
 
   async function handleDelete(product: ProductWithVariants) {
-    if (!window.confirm(`Delete "${product.name}"? This cannot be undone.`)) {
-      return;
-    }
-
     setDeletingId(product.id);
     const ok = await deleteProductAsync(product.id);
     setDeletingId(null);
@@ -171,7 +172,7 @@ export function ProductsList({
                     size="sm"
                     className="gap-2"
                     disabled={deletingId === product.id}
-                    onClick={() => handleDelete(product)}
+                    onClick={() => setProductToDelete(product)}
                   >
                     <FiTrash2 size={14} />
                   </Button>
@@ -181,6 +182,12 @@ export function ProductsList({
           ))}
         </div>
       )}
+      <AlertDialog open={Boolean(productToDelete)} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <AlertDialogContent className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+          <AlertDialogHeader><AlertDialogTitle className="text-lg font-semibold text-slate-950 dark:text-white">Delete product?</AlertDialogTitle><AlertDialogDescription className="text-sm text-slate-500 dark:text-slate-400">This will permanently remove {productToDelete?.name}. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel className="admin-icon-button px-4" onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel><AlertDialogAction className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white" onClick={() => productToDelete && handleDelete(productToDelete)}>Delete</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

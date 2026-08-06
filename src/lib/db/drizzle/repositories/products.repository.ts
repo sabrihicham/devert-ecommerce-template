@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { db } from "../connection";
 import { productsItems, productsVariants, ProductSizeZod } from "../schema";
 import type {
@@ -8,6 +8,7 @@ import type {
   InsertProduct,
   InsertProductVariant,
   ProductCategory,
+  VariantWithProduct,
 } from "@/lib/db/drizzle/schema";
 
 const sizesSchema = z.array(ProductSizeZod);
@@ -35,6 +36,20 @@ export const productsRepository = {
     return result ? transformProduct(result) : null;
   },
 
+  async findVariantWithProduct(id: number): Promise<VariantWithProduct | null> {
+    const result = await db.query.productsVariants.findFirst({
+      where: eq(productsVariants.id, id),
+      with: { product: true },
+    });
+
+    if (!result) return null;
+
+    return {
+      ...transformVariant(result),
+      product: transformProductBase(result.product),
+    };
+  },
+
   async findByCategory(
     category: ProductCategory,
   ): Promise<ProductWithVariants[]> {
@@ -53,10 +68,15 @@ export const productsRepository = {
       .values({
         name: data.name,
         description: data.description,
-        price: String(data.price),
+          price: String(data.price),
+          compareAtPrice: data.compareAtPrice == null ? null : String(data.compareAtPrice),
         category: data.category,
         img: data.img,
-        isFeatured: data.isFeatured ?? false,
+          isFeatured: data.isFeatured ?? false,
+          isBestSeller: data.isBestSeller ?? false,
+          isNewArrival: data.isNewArrival ?? false,
+          stock: data.stock ?? 0,
+          status: data.status ?? "published",
       })
       .returning();
 
@@ -74,9 +94,14 @@ export const productsRepository = {
           name: product.name,
           description: product.description,
           price: String(product.price),
+          compareAtPrice: product.compareAtPrice == null ? null : String(product.compareAtPrice),
           category: product.category,
           img: product.img,
           isFeatured: product.isFeatured ?? false,
+          isBestSeller: product.isBestSeller ?? false,
+          isNewArrival: product.isNewArrival ?? false,
+          stock: product.stock ?? 0,
+          status: product.status ?? "published",
         })
         .returning();
 
@@ -111,9 +136,14 @@ export const productsRepository = {
     if (data.description !== undefined)
       updateData.description = data.description;
     if (data.price !== undefined) updateData.price = String(data.price);
+    if (data.compareAtPrice !== undefined) updateData.compareAtPrice = data.compareAtPrice == null ? null : String(data.compareAtPrice);
     if (data.category !== undefined) updateData.category = data.category;
     if (data.img !== undefined) updateData.img = data.img;
     if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
+    if (data.isBestSeller !== undefined) updateData.isBestSeller = data.isBestSeller;
+    if (data.isNewArrival !== undefined) updateData.isNewArrival = data.isNewArrival;
+    if (data.stock !== undefined) updateData.stock = data.stock;
+    if (data.status !== undefined) updateData.status = data.status;
 
     const [result] = await db
       .update(productsItems)
@@ -141,11 +171,16 @@ export const productsRepository = {
       if (product.description !== undefined)
         updateData.description = product.description;
       if (product.price !== undefined) updateData.price = String(product.price);
+      if (product.compareAtPrice !== undefined) updateData.compareAtPrice = product.compareAtPrice == null ? null : String(product.compareAtPrice);
       if (product.category !== undefined)
         updateData.category = product.category;
       if (product.img !== undefined) updateData.img = product.img;
       if (product.isFeatured !== undefined)
         updateData.isFeatured = product.isFeatured;
+      if (product.isBestSeller !== undefined) updateData.isBestSeller = product.isBestSeller;
+      if (product.isNewArrival !== undefined) updateData.isNewArrival = product.isNewArrival;
+      if (product.stock !== undefined) updateData.stock = product.stock;
+      if (product.status !== undefined) updateData.status = product.status;
 
       const [updatedProduct] = await tx
         .update(productsItems)
@@ -255,8 +290,9 @@ export const productsRepository = {
   /** Most recently created products, for a homepage "New Arrivals" section. */
   async findRecent(limit: number = 8): Promise<ProductWithVariants[]> {
     const result = await db.query.productsItems.findMany({
+      where: eq(productsItems.status, "published"),
       with: { variants: true },
-      orderBy: [desc(productsItems.createdAt)],
+      orderBy: [desc(productsItems.isNewArrival), desc(productsItems.createdAt)],
       limit,
     });
 
@@ -266,12 +302,19 @@ export const productsRepository = {
   /** Admin-curated products, for a homepage "Featured Products" section. */
   async findFeatured(limit: number = 8): Promise<ProductWithVariants[]> {
     const result = await db.query.productsItems.findMany({
-      where: eq(productsItems.isFeatured, true),
+      where: and(eq(productsItems.isFeatured, true), eq(productsItems.status, "published")),
       with: { variants: true },
       orderBy: [desc(productsItems.createdAt)],
       limit,
     });
 
+    return result.map(transformProduct);
+  },
+  async findBestSellers(limit: number = 8): Promise<ProductWithVariants[]> {
+    const result = await db.query.productsItems.findMany({
+      where: and(eq(productsItems.isBestSeller, true), eq(productsItems.status, "published")),
+      with: { variants: true }, orderBy: [desc(productsItems.createdAt)], limit,
+    });
     return result.map(transformProduct);
   },
 };
@@ -282,9 +325,15 @@ function transformProductBase(row: typeof productsItems.$inferSelect): Product {
     name: row.name,
     description: row.description,
     price: Number(row.price),
+    compareAtPrice: row.compareAtPrice === null ? null : Number(row.compareAtPrice),
     category: row.category,
     img: row.img,
     isFeatured: row.isFeatured,
+    isBestSeller: row.isBestSeller,
+    isNewArrival: row.isNewArrival,
+    stock: row.stock,
+    status: row.status,
+    publishedAt: row.publishedAt?.toISOString() ?? null,
     createdAt: row.createdAt?.toISOString() ?? new Date().toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? new Date().toISOString(),
   };

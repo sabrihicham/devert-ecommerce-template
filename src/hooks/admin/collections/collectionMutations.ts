@@ -1,14 +1,13 @@
 import type { CollectionApiResponse } from "@/types/admin";
-import type { InsertCollection, UpdateCollection } from "@/lib/db/drizzle/schema";
+import type { UpdateCollection } from "@/lib/db/drizzle/schema";
 
 export async function createCollection(
-  data: InsertCollection,
+  data: FormData,
 ): Promise<CollectionApiResponse> {
   try {
     const response = await fetch("/api/admin/collections", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: data,
     });
 
     const result = await response.json();
@@ -37,13 +36,12 @@ export async function updateCollection({
   data,
 }: {
   id: number;
-  data: UpdateCollection;
+  data: FormData;
 }): Promise<CollectionApiResponse> {
   try {
     const response = await fetch(`/api/admin/collections/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: data,
     });
 
     const result = await response.json();

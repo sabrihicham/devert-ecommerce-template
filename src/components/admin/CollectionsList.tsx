@@ -16,6 +16,7 @@ import {
 import { CollectionForm } from "./CollectionForm";
 import { useCollectionMutation } from "@/hooks/admin/collections/useCollectionMutation";
 import type { Collection } from "@/lib/db/drizzle/schema";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export function CollectionsList({
   collections,
@@ -29,6 +30,7 @@ export function CollectionsList({
     Collection | undefined
   >();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null);
 
   const { deleteCollectionAsync } = useCollectionMutation();
 
@@ -58,14 +60,6 @@ export function CollectionsList({
   }
 
   async function handleDelete(collection: Collection) {
-    if (
-      !window.confirm(
-        `Delete "${collection.name}"? This cannot be undone.`,
-      )
-    ) {
-      return;
-    }
-
     setDeletingId(collection.id);
     const result = await deleteCollectionAsync(collection.id);
     setDeletingId(null);
@@ -82,10 +76,10 @@ export function CollectionsList({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-white">
-          Collections
+          Categories
         </h1>
         <p className="text-sm text-color-secondary">
-          {items.length} collection{items.length === 1 ? "" : "s"} used to
+          {items.length} categor{items.length === 1 ? "y" : "ies"} used to
           categorize your products
         </p>
       </div>
@@ -99,14 +93,14 @@ export function CollectionsList({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search collections..."
+            placeholder="Search categories..."
             className="pl-9"
           />
         </div>
 
         <Button onClick={openCreate} className="gap-2">
           <FiPlus size={16} />
-          New collection
+          New category
         </Button>
       </div>
 
@@ -115,8 +109,8 @@ export function CollectionsList({
           <FiLayers size={28} className="text-color-secondary" />
           <p className="text-sm text-color-secondary">
             {items.length === 0
-              ? "No collections yet. Create your first one."
-              : "No collections match your search."}
+              ? "No categories yet. Create your first one."
+              : "No categories match your search."}
           </p>
         </div>
       ) : (
@@ -152,7 +146,7 @@ export function CollectionsList({
                   variant="destructive"
                   size="icon"
                   disabled={deletingId === collection.id}
-                  onClick={() => handleDelete(collection)}
+                  onClick={() => setCollectionToDelete(collection)}
                   aria-label="Delete collection"
                 >
                   <FiTrash2 size={16} />
@@ -167,7 +161,7 @@ export function CollectionsList({
         <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingCollection ? "Edit collection" : "New collection"}
+              {editingCollection ? "Edit category" : "New category"}
             </DialogTitle>
           </DialogHeader>
           <CollectionForm
@@ -177,6 +171,7 @@ export function CollectionsList({
           />
         </DialogContent>
       </Dialog>
+      <AlertDialog open={Boolean(collectionToDelete)} onOpenChange={(open) => !open && setCollectionToDelete(null)}><AlertDialogContent className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-950"><AlertDialogHeader><AlertDialogTitle className="text-lg font-semibold text-slate-950 dark:text-white">Delete collection?</AlertDialogTitle><AlertDialogDescription className="text-sm text-slate-500">This will permanently remove {collectionToDelete?.name}.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="admin-icon-button px-4">Cancel</AlertDialogCancel><AlertDialogAction className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white" onClick={() => collectionToDelete && handleDelete(collectionToDelete)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     </div>
   );
 }

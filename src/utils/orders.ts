@@ -12,7 +12,7 @@ export function transformOrderToViewModel(
 ): Order {
   return {
     id: order.id,
-    userId: order.userId,
+    userId: order.userId ?? undefined,
     orderNumber: order.orderNumber,
     items: products.map((p) => ({
       productId: 0,

@@ -12,11 +12,15 @@ import {
 } from "drizzle-orm/pg-core";
 import { WILAYA_CODES } from "@/constants/wilayas";
 
+export const BrandThemeZod = z.enum(["performance", "endurance", "energy"]);
+export type BrandTheme = z.infer<typeof BrandThemeZod>;
+
 export const storeSettings = pgTable(
   "store_settings",
   {
     id: integer("id").primaryKey().default(1),
     storeName: text("store_name").notNull(),
+    logoUrl: text("logo_url"),
     storePhone: text("store_phone").notNull(),
     whatsappNumber: text("whatsapp_number"),
     addressLine1: text("address_line1"),
@@ -26,6 +30,7 @@ export const storeSettings = pgTable(
     bannerActive: boolean("banner_active").notNull().default(false),
     minOrderAmountCents: integer("min_order_amount_cents"),
     maxPendingOrdersPerPhone: integer("max_pending_orders_per_phone"),
+    brandTheme: text("brand_theme").$type<BrandTheme>().notNull().default("performance"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -49,6 +54,7 @@ export const storeSettings = pgTable(
 
 // Zod Schemas
 export const selectStoreSettingsSchema = createSelectSchema(storeSettings, {
+  brandTheme: BrandThemeZod,
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -56,6 +62,7 @@ export const selectStoreSettingsSchema = createSelectSchema(storeSettings, {
 export const updateStoreSettingsSchema = z
   .object({
     storeName: z.string().trim().min(1, "Store name is required"),
+    logoUrl: z.string().url().nullable().optional(),
     storePhone: z
       .string()
       .trim()
@@ -89,6 +96,7 @@ export const updateStoreSettingsSchema = z
       .positive("Must be a positive number")
       .nullable()
       .optional(),
+    brandTheme: BrandThemeZod.optional(),
   })
   .partial();
 

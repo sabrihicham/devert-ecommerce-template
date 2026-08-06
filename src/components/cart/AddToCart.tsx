@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useRouter } from "next/navigation";
 
 import { useThrottleFn } from "ahooks";
 
@@ -21,6 +22,7 @@ interface BaseAddToCartProps {
 }
 
 function useAddToCartAction(selectedVariant?: ProductVariant) {
+  const router = useRouter();
   const { add: addToCart } = useCartMutation();
   const sizesRef = useRef<SizesRef>(null!);
 
@@ -40,6 +42,11 @@ function useAddToCartAction(selectedVariant?: ProductVariant) {
     sizesRef,
     throttledAddToCart,
     isDisabled: !selectedVariant,
+    buyNow: () => {
+      if (!selectedVariant) return;
+      const size = sizesRef.current.selectedSize;
+      router.push(`/checkout/direct?variant=${selectedVariant.id}&size=${encodeURIComponent(size)}`);
+    },
   };
 }
 
@@ -47,7 +54,7 @@ export function AddToCart({
   product,
   selectedVariant,
 }: BaseAddToCartProps) {
-  const { sizesRef, throttledAddToCart, isDisabled } =
+  const { sizesRef, throttledAddToCart, isDisabled, buyNow } =
     useAddToCartAction(selectedVariant);
 
   return (
@@ -60,15 +67,23 @@ export function AddToCart({
         />
       </div>
 
-      <div className="border-t border-solid border-border-primary">
+      <div className="grid grid-cols-2 border-t border-solid border-border-primary">
         <Button
           type="submit"
           variant="default"
           disabled={isDisabled}
           onClick={() => throttledAddToCart()}
-          className="w-full rounded-none bg-background-secondary p-2 text-13 transition duration-150 ease hover:bg-background-tertiary"
+          className="rounded-none border-r border-border-primary bg-background-secondary p-2 text-13 transition duration-150 ease hover:bg-background-tertiary"
         >
           Add to cart
+        </Button>
+        <Button
+          type="button"
+          disabled={isDisabled}
+          onClick={buyNow}
+          className="rounded-none bg-white p-2 text-13 text-black hover:bg-neutral-200"
+        >
+          Buy now
         </Button>
       </div>
     </>
@@ -79,7 +94,7 @@ export function MobileAddToCart({
   product,
   selectedVariant,
 }: BaseAddToCartProps) {
-  const { sizesRef, throttledAddToCart, isDisabled } =
+  const { sizesRef, throttledAddToCart, isDisabled, buyNow } =
     useAddToCartAction(selectedVariant);
 
   return (
@@ -97,15 +112,10 @@ export function MobileAddToCart({
         />
       </div>
 
-      <Button
-        type="submit"
-        variant="default"
-        disabled={isDisabled}
-        onClick={() => throttledAddToCart()}
-        className="w-full rounded-md bg-white py-3 text-sm font-medium text-black transition-colors hover:bg-gray-100"
-      >
-        Add to cart
-      </Button>
+      <div className="grid grid-cols-2 gap-2.5">
+        <Button type="button" variant="outline" disabled={isDisabled} onClick={() => throttledAddToCart()} className="h-11 border-border-secondary bg-background-secondary text-sm">Add to cart</Button>
+        <Button type="button" disabled={isDisabled} onClick={buyNow} className="h-11 bg-white text-sm text-black hover:bg-neutral-200">Buy now</Button>
+      </div>
     </div>
   );
 }

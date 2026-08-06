@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -19,7 +20,8 @@ import {
 } from "@/components/ui/select";
 import { ALGERIAN_WILAYAS } from "@/constants/wilayas";
 import { cn } from "@/lib/utils";
-import type { StoreSettings } from "@/lib/db/drizzle/schema";
+import { Switch } from "@/components/ui/switch";
+import type { BrandTheme, StoreSettings } from "@/lib/db/drizzle/schema";
 
 interface SettingsFormProps {
   settings: StoreSettings;
@@ -30,6 +32,11 @@ interface FormErrors {
 }
 
 const NO_WILAYA = "none";
+const BRAND_THEMES: Array<{ value: BrandTheme; name: string; description: string; color: string }> = [
+  { value: "performance", name: "Performance Green", description: "Natural strength and daily health", color: "#16A34A" },
+  { value: "endurance", name: "Endurance Blue", description: "Focus, hydration and endurance", color: "#2563EB" },
+  { value: "energy", name: "Energy Orange", description: "Pre-workout and high intensity", color: "#EA580C" },
+];
 
 export function SettingsForm({ settings }: SettingsFormProps) {
   const router = useRouter();
@@ -57,6 +64,9 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       : "",
   );
   const [errors, setErrors] = useState<FormErrors>({});
+  const [brandTheme, setBrandTheme] = useState<BrandTheme>(settings.brandTheme);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState(settings.logoUrl ?? null);
 
   const { mutate: saveSettings, isPending } = useMutation({
     mutationFn: async () => {
@@ -73,12 +83,16 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           minOrderAmount.trim() === "" ? null : Math.round(Number(minOrderAmount) * 100),
         maxPendingOrdersPerPhone:
           maxPendingOrders.trim() === "" ? null : Number(maxPendingOrders),
+        brandTheme,
       };
 
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => formData.set(key, value == null ? "" : String(value)));
+      formData.set("logoUrl", settings.logoUrl ?? "");
+      if (logo) formData.set("logo", logo);
       const response = await fetch("/api/admin/settings", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       const data = await response.json().catch(() => ({}));
@@ -94,6 +108,8 @@ export function SettingsForm({ settings }: SettingsFormProps) {
     },
     onSuccess: () => {
       setErrors({});
+      document.documentElement.dataset.brand = brandTheme;
+      window.localStorage.setItem("store-brand-theme", brandTheme);
       toast.success("Settings saved");
       router.refresh();
     },
@@ -117,6 +133,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         </p>
 
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2 sm:col-span-2"><Label htmlFor="store-logo">Store logo</Label><div className="flex items-center gap-4 rounded-xl border border-dashed border-border p-3">{logoPreview ? <Image src={logoPreview} alt="Store logo preview" width={112} height={64} className="h-16 w-28 rounded-lg object-contain bg-muted"/> : <div className="grid h-16 w-28 place-items-center rounded-lg bg-muted text-xs text-muted-foreground">No logo</div>}<Input id="store-logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="max-w-xs" onChange={(event) => { const file = event.target.files?.[0]; if (file) { setLogo(file); setLogoPreview(URL.createObjectURL(file)); } }}/></div><p className="text-xs text-muted-foreground">PNG, JPG, WebP or SVG. Used in the storefront header and footer.</p></div>
           <div className="space-y-2">
             <Label htmlFor="storeName">
               Store name <span className="text-red-400">*</span>
@@ -198,6 +215,20 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         </div>
       </section>
 
+      <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-card-foreground">Brand appearance</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Choose the color palette for your storefront and admin dashboard.</p>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {BRAND_THEMES.map((theme) => {
+            const selected = brandTheme === theme.value;
+            return <button key={theme.value} type="button" onClick={() => setBrandTheme(theme.value)} className={cn("rounded-xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", selected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-background hover:border-input")} aria-pressed={selected}>
+              <span className="flex items-center justify-between gap-3"><span className="h-9 w-9 rounded-lg shadow-sm" style={{ backgroundColor: theme.color }} /><span className={cn("rounded-full px-2 py-1 text-xs font-semibold", selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{selected ? "Selected" : "Select"}</span></span>
+              <span className="mt-4 block font-semibold text-foreground">{theme.name}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{theme.description}</span>
+            </button>;
+          })}
+        </div>
+      </section>
+
       {/* Homepage Banner */}
       <section className="rounded-lg border border-border-primary bg-background-secondary p-5">
         <div className="flex items-center justify-between gap-4">
@@ -207,23 +238,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               Show a short announcement at the top of the homepage.
             </p>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={bannerActive}
-            onClick={() => setBannerActive((prev) => !prev)}
-            className={cn(
-              "relative h-6 w-11 shrink-0 rounded-full transition-colors",
-              bannerActive ? "bg-violet-600" : "bg-background-tertiary",
-            )}
-          >
-            <span
-              className={cn(
-                "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform",
-                bannerActive ? "translate-x-[22px]" : "translate-x-0.5",
-              )}
-            />
-          </button>
+          <Switch checked={bannerActive} onCheckedChange={setBannerActive} aria-label="Enable homepage banner" />
         </div>
 
         <div className="mt-4 space-y-2">

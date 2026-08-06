@@ -6,6 +6,9 @@ import {
   bigserial,
   varchar,
   timestamp,
+  text,
+  boolean,
+  integer,
   pgPolicy,
 } from "drizzle-orm/pg-core";
 import { anonRole } from "drizzle-orm/supabase";
@@ -16,6 +19,12 @@ export const collections = pgTable(
     id: bigserial("id", { mode: "number" }).primaryKey(),
     name: varchar("name", { length: 100 }).notNull(),
     slug: varchar("slug", { length: 100 }).notNull().unique(),
+    imageUrl: text("image_url"),
+    mobileImageUrl: text("mobile_image_url"),
+    description: text("description"),
+    isFeatured: boolean("is_featured").notNull().default(false),
+    isVisible: boolean("is_visible").notNull().default(true),
+    displayOrder: integer("display_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -57,6 +66,10 @@ export const insertCollectionSchema = createInsertSchema(collections, {
     .min(1, "Slug is required")
     .max(100)
     .regex(slugRegex, "Use lowercase letters, numbers, and hyphens only"),
+  imageUrl: z.string().url().nullable().optional(),
+  mobileImageUrl: z.string().url().nullable().optional(),
+  description: z.string().trim().max(320).nullable().optional(),
+  displayOrder: z.coerce.number().int().nonnegative().optional(),
 }).omit({
   id: true,
   createdAt: true,
