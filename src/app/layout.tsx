@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 import { Suspense } from "react";
 import Script from "next/script";
 
-import { StoreChrome } from "@/components/layout/StoreChrome";
+import { LocalizedStoreChrome } from "@/components/layout/StoreChrome";
 import { Providers } from "@/providers";
 import "@/styles/globals.css";
 import "@/styles/colors.css";
@@ -79,7 +79,7 @@ export default async function RootLayout({
           `}</Script>
         <Providers>
           <Suspense fallback={<main className="min-h-screen" />}>
-            <StoreChrome><main className="pointer-events-auto mx-auto w-full max-w-[1920px]">{children}</main></StoreChrome>
+            <LocalizedStoreChrome><main className="pointer-events-auto mx-auto w-full max-w-[1920px]">{children}</main></LocalizedStoreChrome>
           </Suspense>
           <div>
             <Toaster position="bottom-right" />

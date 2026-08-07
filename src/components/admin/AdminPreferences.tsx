@@ -1,55 +1,38 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 import { Languages } from "lucide-react";
 import { ThemeToggle as SharedThemeToggle } from "@/components/ui/theme-toggle";
+import { useLocale } from "@/providers/LocaleProvider";
 
-type Locale = "ar" | "en";
+type Locale = "ar" | "fr";
 type AdminCopy = Record<string, string>;
 
 const translations = {
-  en: {
-    admin: "Storefront Admin", dashboard: "Dashboard", products: "Products", collections: "Collections", banners: "Banners", orders: "Orders", settings: "Settings",
-    backToStore: "View store", signOut: "Sign out", appearance: "Appearance", language: "العربية", search: "Search", quickActions: "Quick actions",
-    welcome: "Welcome back", overview: "Here is what is happening in your store today.", totalOrders: "Total orders", pendingOrders: "Pending orders", deliveredRevenue: "Delivered revenue", catalogProducts: "Catalog products",
-    orderPipeline: "Order pipeline", recentOrders: "Recent orders", viewAll: "View all", noOrders: "No orders yet", newProduct: "New product", manageOrders: "Manage orders", storeSettings: "Store settings",
+  fr: {
+    admin: "Administration", dashboard: "Tableau de bord", products: "Produits", collections: "Catégories", banners: "Bannières", orders: "Commandes", settings: "Paramètres",
+    backToStore: "Voir la boutique", signOut: "Se déconnecter", appearance: "Apparence", language: "عربي", quickActions: "Actions rapides",
+    welcome: "Bienvenue", overview: "Voici l’activité de votre boutique aujourd’hui.", totalOrders: "Total des commandes", pendingOrders: "Commandes en attente", deliveredRevenue: "Chiffre des commandes livrées", catalogProducts: "Produits du catalogue",
+    orderPipeline: "Suivi des commandes", recentOrders: "Commandes récentes", viewAll: "Voir tout", noOrders: "Aucune commande", newProduct: "Nouveau produit", manageOrders: "Gérer les commandes", storeSettings: "Paramètres de la boutique",
   },
   ar: {
     admin: "إدارة المتجر", dashboard: "لوحة التحكم", products: "المنتجات", collections: "التصنيفات", banners: "البنرات", orders: "الطلبات", settings: "الإعدادات",
-    backToStore: "عرض المتجر", signOut: "تسجيل الخروج", appearance: "المظهر", language: "English", search: "بحث", quickActions: "إجراءات سريعة",
+    backToStore: "عرض المتجر", signOut: "تسجيل الخروج", appearance: "المظهر", language: "Français", quickActions: "إجراءات سريعة",
     welcome: "مرحباً بعودتك", overview: "إليك ملخص نشاط متجرك اليوم.", totalOrders: "إجمالي الطلبات", pendingOrders: "طلبات بانتظار الإجراء", deliveredRevenue: "إيراد الطلبات المسلّمة", catalogProducts: "منتجات الكتالوج",
     orderPipeline: "حالات الطلبات", recentOrders: "أحدث الطلبات", viewAll: "عرض الكل", noOrders: "لا توجد طلبات حتى الآن", newProduct: "منتج جديد", manageOrders: "إدارة الطلبات", storeSettings: "إعدادات المتجر",
   },
 } as const;
 
 const AdminLocaleContext = createContext<{ locale: Locale; t: AdminCopy; toggleLocale: () => void }>({
-  locale: "en", t: translations.en, toggleLocale: () => undefined,
+  locale: "fr", t: translations.fr, toggleLocale: () => undefined,
 });
 
 export function useAdminLocale() { return useContext(AdminLocaleContext); }
 
-function AdminLocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<Locale>("en");
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const saved = window.localStorage.getItem("admin-locale") as Locale | null;
-      setLocale(saved === "ar" || saved === "en" ? saved : navigator.language.startsWith("ar") ? "ar" : "en");
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const toggleLocale = () => setLocale((value) => {
-    const next = value === "ar" ? "en" : "ar";
-    window.localStorage.setItem("admin-locale", next);
-    return next;
-  });
-
-  return <AdminLocaleContext.Provider value={{ locale, t: translations[locale], toggleLocale }}>{children}</AdminLocaleContext.Provider>;
-}
-
 export function AdminPreferences({ children }: { children: React.ReactNode }) {
-  return <AdminLocaleProvider>{children}</AdminLocaleProvider>;
+  const { locale, setLocale } = useLocale();
+  const toggleLocale = () => setLocale(locale === "ar" ? "fr" : "ar");
+  return <AdminLocaleContext.Provider value={{ locale, t: translations[locale], toggleLocale }}>{children}</AdminLocaleContext.Provider>;
 }
 
 export function ThemeToggle() {

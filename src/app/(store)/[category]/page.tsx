@@ -13,6 +13,7 @@ import {
   sortProducts,
 } from "@/components/products";
 import type { ProductCategory } from "@/lib/db/drizzle/schema";
+import { getServerLocale } from "@/lib/i18n/server";
 
 interface Props {
   params: Promise<{
@@ -46,26 +47,29 @@ export async function generateMetadata({ params }: Props) {
 async function DynamicCategoryContent({
   params,
   sort,
+  locale,
 }: {
   params: Promise<{ category: string }>;
   sort: ReturnType<typeof getCatalogSort>;
+  locale: Awaited<ReturnType<typeof getServerLocale>>;
 }) {
   const { category } = await params;
-  const collection = await getCollectionBySlug(category);
+  const collection = await getCollectionBySlug(category, locale);
 
   if (!collection) {
     notFound();
   }
 
-  return <CategoryProducts category={collection.slug} title={collection.name} sort={sort} />;
+  return <CategoryProducts category={collection.slug} title={collection.name} sort={sort} locale={locale} />;
 }
 
 const CategoryPage = async ({ params, searchParams }: Props) => {
   const sort = getCatalogSort((await searchParams).sort);
+  const locale = await getServerLocale();
   return (
     <section className="pt-14">
       <Suspense fallback={<ProductsSkeleton items={6} />}>
-        <DynamicCategoryContent params={params} sort={sort} />
+        <DynamicCategoryContent params={params} sort={sort} locale={locale} />
       </Suspense>
     </section>
   );
@@ -75,12 +79,14 @@ const CategoryProducts = async ({
   category,
   title,
   sort,
+  locale,
 }: {
   category: ProductCategory;
   title: string;
   sort: ReturnType<typeof getCatalogSort>;
+  locale: Awaited<ReturnType<typeof getServerLocale>>;
 }) => {
-  const products = await getCategoryProducts(category);
+  const products = await getCategoryProducts(category, locale);
   return <ProductCatalog title={title} eyebrow="Collection" products={sortProducts(products, sort)} sort={sort} />;
 };
 

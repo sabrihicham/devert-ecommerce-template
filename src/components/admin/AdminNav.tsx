@@ -25,7 +25,7 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useAdminLocale();
 
   return (
-    <nav className="flex flex-col gap-1 px-3">
+    <nav aria-label={t.admin} className="flex flex-col gap-1 px-3">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const active = isActive(pathname, href);
         return (
@@ -35,12 +35,13 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+              "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
               active
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
+            {active && <span aria-hidden="true" className="absolute inset-y-2 start-0 w-1 rounded-full bg-primary-foreground/80" />}
             <Icon
               size={18}
               className={cn(active ? "text-primary-foreground" : "text-muted-foreground")}

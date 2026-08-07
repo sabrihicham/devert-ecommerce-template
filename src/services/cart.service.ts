@@ -4,6 +4,7 @@ import type {
   CartItemWithDetails,
   AddToCartInput,
 } from "@/lib/db/drizzle/schema";
+import { getLocalizedArray, getLocalizedText, type Locale } from "@/lib/i18n";
 
 export async function getCart(userId: string): Promise<CartItem[]> {
   try {
@@ -16,9 +17,26 @@ export async function getCart(userId: string): Promise<CartItem[]> {
 
 export async function getCartWithDetails(
   userId: string,
+  locale: Locale = "ar",
 ): Promise<CartItemWithDetails[]> {
   try {
-    return await cartRepository.findByUserIdWithDetails(userId);
+    const items = await cartRepository.findByUserIdWithDetails(userId);
+    return items.map((item) => ({
+      ...item,
+      product: {
+        ...item.product,
+        name: getLocalizedText({ locale, ar: item.product.name, fr: item.product.nameFr }),
+        description: getLocalizedText({ locale, ar: item.product.description, fr: item.product.descriptionFr }),
+        ingredients: getLocalizedText({ locale, ar: item.product.ingredients, fr: item.product.ingredientsFr }),
+        usage: getLocalizedText({ locale, ar: item.product.usage, fr: item.product.usageFr }),
+        warnings: getLocalizedText({ locale, ar: item.product.warnings, fr: item.product.warningsFr }),
+        tags: getLocalizedArray({ locale, ar: item.product.tags, fr: item.product.tagsFr }),
+      },
+      variant: {
+        ...item.variant,
+        flavor: getLocalizedText({ locale, ar: item.variant.flavor, fr: item.variant.flavorFr }),
+      },
+    }));
   } catch (error) {
     console.error("Error fetching cart with details:", error);
     return [];

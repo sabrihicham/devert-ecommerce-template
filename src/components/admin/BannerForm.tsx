@@ -30,7 +30,10 @@ export function BannerForm({ banner, onSuccess, onCancel }: BannerFormProps) {
     useBannerMutation();
 
   const [title, setTitle] = useState(banner?.title || "");
+  const [titleFr, setTitleFr] = useState(banner?.titleFr || banner?.title || "");
   const [subtitle, setSubtitle] = useState(banner?.subtitle || "");
+  const [subtitleFr, setSubtitleFr] = useState(banner?.subtitleFr || banner?.subtitle || "");
+  const [buttonLabelFr, setButtonLabelFr] = useState(banner?.buttonLabelFr || banner?.buttonLabel || "");
   const [linkUrl, setLinkUrl] = useState(banner?.linkUrl || "");
   const [isActive, setIsActive] = useState(banner?.isActive ?? true);
   const [file, setFile] = useState<File | null>(null);
@@ -61,7 +64,10 @@ export function BannerForm({ banner, onSuccess, onCancel }: BannerFormProps) {
 
     const formData = new FormData();
     formData.append("title", title);
+    formData.append("titleFr", titleFr);
     formData.append("subtitle", subtitle);
+    formData.append("subtitleFr", subtitleFr);
+    formData.append("buttonLabelFr", buttonLabelFr);
     formData.append("linkUrl", linkUrl);
     formData.append("isActive", String(isActive));
     if (file) formData.append("image", file);
@@ -82,6 +88,10 @@ export function BannerForm({ banner, onSuccess, onCancel }: BannerFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {/* Image */}
+      <div dir="ltr" className="grid gap-4 rounded-xl border border-border bg-muted/30 p-4 sm:grid-cols-2">
+        <div className="space-y-2"><Label>Titre français</Label><Input value={titleFr} onChange={(event) => setTitleFr(event.target.value)} placeholder="Les essentiels de votre routine" /></div>
+        <div className="space-y-2"><Label>Sous-titre français</Label><Textarea value={subtitleFr} onChange={(event) => setSubtitleFr(event.target.value)} placeholder="Des produits sélectionnés pour vous" /></div>
+      </div>
       <div className="space-y-2">
         <Label className="text-sm font-medium text-color-secondary">
           Banner image <span className="text-red-400">*</span>

@@ -26,12 +26,18 @@ const productIdSchema = z.coerce.number().int().positive();
 
 const productFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
+  nameFr: z.string().trim().min(1, "French product name is required"),
   description: z.string().trim().min(1, "Description is required"),
+  descriptionFr: z.string().trim().min(1, "French description is required"),
   brand: z.string().trim().min(1, "Brand is required"),
   ingredients: z.string().default(""),
+  ingredientsFr: z.string().default(""),
   usage: z.string().default(""),
+  usageFr: z.string().default(""),
   warnings: z.string().default(""),
+  warningsFr: z.string().default(""),
   tags: z.array(z.string()).default([]),
+  tagsFr: z.array(z.string()).default([]),
   price: z.coerce.number().positive("Price must be greater than 0"),
   compareAtPrice: z.coerce.number().positive().nullable().optional(),
   category: ProductCategoryZod,
@@ -41,6 +47,7 @@ const productFormSchema = z.object({
 const variantFormSchema = z.object({
   id: z.number().int().positive().optional(),
   flavor: z.string().trim().min(1, "Flavor is required"),
+  flavorFr: z.string().trim().min(1, "French flavor is required"),
   form: SupplementFormZod,
   quantity: z.coerce.number().positive(),
   quantityUnit: QuantityUnitZod,
@@ -267,6 +274,7 @@ async function buildVariants({
       return {
         id: variant.id,
         flavor: variant.flavor,
+        flavorFr: variant.flavorFr,
         form: variant.form,
         quantity: variant.quantity,
         quantityUnit: variant.quantityUnit,
@@ -297,12 +305,18 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const productData = productFormSchema.parse({
       name: formData.get("name"),
+      nameFr: formData.get("nameFr"),
       description: formData.get("description"),
+      descriptionFr: formData.get("descriptionFr"),
       brand: formData.get("brand"),
       ingredients: formData.get("ingredients") ?? "",
+      ingredientsFr: formData.get("ingredientsFr") ?? "",
       usage: formData.get("usage") ?? "",
+      usageFr: formData.get("usageFr") ?? "",
       warnings: formData.get("warnings") ?? "",
+      warningsFr: formData.get("warningsFr") ?? "",
       tags: parseTags(formData.get("tags")),
+      tagsFr: parseTags(formData.get("tagsFr")),
       price: formData.get("price"),
       compareAtPrice: formData.get("compareAtPrice") || null,
       category: formData.get("category"),

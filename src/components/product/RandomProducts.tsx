@@ -3,21 +3,25 @@ import { GridProducts } from "../products/GridProducts";
 import { ProductItem } from "../products/ProductItem";
 import { ProductsSkeleton } from "../products/ProductsSkeleton";
 import { Suspense } from "react";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 export const RandomProducts = async ({
   productIdToExclude,
   showTitle = true,
+  locale,
 }: {
   productIdToExclude: number;
   showTitle?: boolean;
+  locale?: Locale;
 }) => {
-  const randomProducts = await getRandomProducts(productIdToExclude);
+  const randomProducts = await getRandomProducts(productIdToExclude, locale ?? "ar");
+  const title = getDictionary(locale ?? "ar").home.latest;
 
   return (
     <>
       {showTitle && (
         <h2 className="mt-24 mb-5 text-xl font-bold sm:text-2xl">
-          YOU MIGHT ALSO LIKE...
+          {title}
         </h2>
       )}
       <GridProducts className="grid-cols-auto-fill-110">
@@ -32,9 +36,11 @@ export const RandomProducts = async ({
 export const SuspenseRandomProducts = async ({
   productIdToExclude,
   showTitle = true,
+  locale,
 }: {
   productIdToExclude: number;
   showTitle?: boolean;
+  locale?: Locale;
 }) => {
   return (
     <Suspense
@@ -42,7 +48,7 @@ export const SuspenseRandomProducts = async ({
         <>
           {showTitle && (
             <h2 className="mt-24 mb-5 text-xl font-bold sm:text-2xl">
-              YOU MIGHT ALSO LIKE...
+              {getDictionary(locale ?? "ar").home.latest}
             </h2>
           )}
           <ProductsSkeleton extraClassname={"colums-mobile"} items={6} />
@@ -52,6 +58,7 @@ export const SuspenseRandomProducts = async ({
       <RandomProducts
         productIdToExclude={productIdToExclude}
         showTitle={showTitle}
+        locale={locale}
       />
     </Suspense>
   );

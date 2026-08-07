@@ -42,6 +42,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   const router = useRouter();
 
   const [storeName, setStoreName] = useState(settings.storeName);
+  const [storeNameFr, setStoreNameFr] = useState(settings.storeNameFr ?? settings.storeName);
   const [storePhone, setStorePhone] = useState(settings.storePhone);
   const [whatsappNumber, setWhatsappNumber] = useState(
     settings.whatsappNumber ?? "",
@@ -53,6 +54,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   );
   const [bannerActive, setBannerActive] = useState(settings.bannerActive);
   const [bannerText, setBannerText] = useState(settings.bannerText ?? "");
+  const [bannerTextFr, setBannerTextFr] = useState(settings.bannerTextFr ?? settings.bannerText ?? "");
   const [minOrderAmount, setMinOrderAmount] = useState(
     settings.minOrderAmountCents != null
       ? String(settings.minOrderAmountCents / 100)
@@ -72,6 +74,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
     mutationFn: async () => {
       const payload = {
         storeName,
+        storeNameFr,
         storePhone,
         whatsappNumber: whatsappNumber.trim() || null,
         addressLine1: addressLine1.trim() || null,
@@ -79,6 +82,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
         addressWilaya: addressWilaya === NO_WILAYA ? null : addressWilaya,
         bannerActive,
         bannerText: bannerText.trim() || null,
+        bannerTextFr: bannerTextFr.trim() || null,
         minOrderAmountCents:
           minOrderAmount.trim() === "" ? null : Math.round(Number(minOrderAmount) * 100),
         maxPendingOrdersPerPhone:
@@ -134,6 +138,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2"><Label htmlFor="store-logo">Store logo</Label><div className="flex items-center gap-4 rounded-xl border border-dashed border-border p-3">{logoPreview ? <Image src={logoPreview} alt="Store logo preview" width={112} height={64} className="h-16 w-28 rounded-lg object-contain bg-muted"/> : <div className="grid h-16 w-28 place-items-center rounded-lg bg-muted text-xs text-muted-foreground">No logo</div>}<Input id="store-logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="max-w-xs" onChange={(event) => { const file = event.target.files?.[0]; if (file) { setLogo(file); setLogoPreview(URL.createObjectURL(file)); } }}/></div><p className="text-xs text-muted-foreground">PNG, JPG, WebP or SVG. Used in the storefront header and footer.</p></div>
+          <div className="space-y-2"><Label htmlFor="storeNameFr">Nom de la boutique *</Label><Input id="storeNameFr" dir="ltr" value={storeNameFr} onChange={(event) => setStoreNameFr(event.target.value)} placeholder="Forma Nutrition" /></div>
           <div className="space-y-2">
             <Label htmlFor="storeName">
               Store name <span className="text-red-400">*</span>
@@ -260,6 +265,10 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             <span className="text-xs text-color-tertiary">
               {bannerText.length}/280
             </span>
+          </div>
+          <div dir="ltr" className="space-y-2 rounded-xl border border-border p-3">
+            <Label htmlFor="bannerTextFr">Texte de la bannière</Label>
+            <Textarea id="bannerTextFr" value={bannerTextFr} onChange={(event) => setBannerTextFr(event.target.value)} placeholder="Livraison offerte dès 5000 DZD" maxLength={280} />
           </div>
         </div>
       </section>

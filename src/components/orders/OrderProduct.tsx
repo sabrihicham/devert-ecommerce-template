@@ -22,7 +22,7 @@ export const OrderProduct = async ({
   const variant = variants[0];
   const blurDataURL = await getBlurDataURL(variant.images[0]);
 
-  const productLink = `/${category}/${id}?variant=${variant.flavor}`;
+  const productLink = `/${category}/${id}?variant=${variant.id}`;
 
   return (
     <div className="flex flex-col justify-between overflow-hidden rounded-md border border-solid border-border-primary">

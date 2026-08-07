@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import type { CartItem } from "@/lib/db/drizzle/schema";
+import { useTranslations } from "@/providers/LocaleProvider";
 
 interface ButtonCheckoutProps {
   cartItemIds: CartItem["id"][];
@@ -11,6 +12,7 @@ interface ButtonCheckoutProps {
 
 export const ButtonCheckout = ({ cartItemIds }: ButtonCheckoutProps) => {
   const isDisabled = cartItemIds.length === 0;
+  const t = useTranslations();
 
   return (
     <Button
@@ -19,9 +21,8 @@ export const ButtonCheckout = ({ cartItemIds }: ButtonCheckoutProps) => {
       className="w-full rounded-none bg-background-secondary p-2.5 h-full transition-all hover:bg-background-tertiary"
     >
       <Link href={isDisabled ? "#" : "/checkout"} aria-disabled={isDisabled}>
-        Continue
+        {t.cart.checkout}
       </Link>
     </Button>
   );
 };
-

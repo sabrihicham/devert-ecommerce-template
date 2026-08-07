@@ -11,12 +11,18 @@ import { Button } from "@/components/ui/button";
 /** TYPES */
 import type { ProductWithVariants } from "@/lib/db/drizzle/schema";
 import { useWishlistMutation } from "@/hooks/wishlist/mutations/useWishlistMutation";
+import { useSyncExternalStore } from "react";
 
 interface WishlistButtonProps {
   productId: ProductWithVariants["id"];
 }
 
 const WishlistButton = ({ productId }: WishlistButtonProps) => {
+  const mounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
   const { isInWishlist, isLoading } = useWishlist();
   const { remove: removeFromWishlist, add: addToWishlist } =
     useWishlistMutation();
@@ -36,7 +42,10 @@ const WishlistButton = ({ productId }: WishlistButtonProps) => {
     },
   );
 
-  if (isLoading) {
+  // Keep the server render and the first client render identical. The
+  // wishlist depends on the authenticated browser session and is resolved
+  // immediately after hydration.
+  if (!mounted || isLoading) {
     return (
       <div className="p-2">
         <Skeleton className="h-4 w-4 rounded-full" />

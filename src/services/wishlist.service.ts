@@ -3,6 +3,7 @@ import type {
   WishlistItem,
   WishlistItemWithProduct,
 } from "@/lib/db/drizzle/schema";
+import { getLocalizedArray, getLocalizedText, type Locale } from "@/lib/i18n";
 
 export async function getWishlist(userId: string): Promise<WishlistItem[]> {
   try {
@@ -15,9 +16,26 @@ export async function getWishlist(userId: string): Promise<WishlistItem[]> {
 
 export async function getWishlistWithDetails(
   userId: string,
+  locale: Locale = "ar",
 ): Promise<WishlistItemWithProduct[]> {
   try {
-    return await wishlistRepository.findByUserIdWithDetails(userId);
+    const items = await wishlistRepository.findByUserIdWithDetails(userId);
+    return items.map((item) => ({
+      ...item,
+      product: {
+        ...item.product,
+        name: getLocalizedText({ locale, ar: item.product.name, fr: item.product.nameFr }),
+        description: getLocalizedText({ locale, ar: item.product.description, fr: item.product.descriptionFr }),
+        ingredients: getLocalizedText({ locale, ar: item.product.ingredients, fr: item.product.ingredientsFr }),
+        usage: getLocalizedText({ locale, ar: item.product.usage, fr: item.product.usageFr }),
+        warnings: getLocalizedText({ locale, ar: item.product.warnings, fr: item.product.warningsFr }),
+        tags: getLocalizedArray({ locale, ar: item.product.tags, fr: item.product.tagsFr }),
+        variants: item.product.variants.map((variant) => ({
+          ...variant,
+          flavor: getLocalizedText({ locale, ar: variant.flavor, fr: variant.flavorFr }),
+        })),
+      },
+    }));
   } catch (error) {
     console.error("Error fetching wishlist with details:", error);
     return [];

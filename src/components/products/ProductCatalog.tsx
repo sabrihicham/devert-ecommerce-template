@@ -7,6 +7,7 @@ import { CatalogToolbar } from "./CatalogToolbar";
 import { GridProducts } from "./GridProducts";
 import { ProductItem } from "./ProductItem";
 import type { CatalogSort } from "./catalog";
+import { useTranslations } from "@/providers/LocaleProvider";
 
 interface ProductCatalogProps {
   title: string;
@@ -24,12 +25,13 @@ export function ProductCatalog({
   const [density, setDensity] = useState<"comfortable" | "compact">(
     "comfortable",
   );
+  const t = useTranslations();
 
   return (
     <section className="space-y-6 sm:space-y-8">
       <div className="max-w-2xl space-y-2">
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-color-secondary">
-          {eyebrow}
+          {eyebrow === "Collection" ? t.home.categoriesTitle : eyebrow}
         </p>
         <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
           {title}
@@ -51,9 +53,9 @@ export function ProductCatalog({
         </GridProducts>
       ) : (
         <div className="flex min-h-72 flex-col items-center justify-center rounded-xl border border-dashed border-border-secondary/60 bg-background-secondary px-6 text-center">
-          <h2 className="text-lg font-semibold">Nothing here yet</h2>
+          <h2 className="text-lg font-semibold">{t.catalog.empty}</h2>
           <p className="mt-2 max-w-sm text-sm text-color-secondary">
-            New pieces are on their way. Please check back soon.
+            {t.catalog.emptyText}
           </p>
         </div>
       )}

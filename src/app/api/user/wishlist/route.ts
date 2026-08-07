@@ -6,6 +6,7 @@ import {
   wishlistItemWithProductSchema,
 } from "@/lib/db/drizzle/schema";
 import { getUser } from "@/lib/auth/server";
+import { getServerLocale } from "@/lib/i18n/server";
 import {
   addToWishlist,
   getWishlist,
@@ -27,13 +28,14 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) return NextResponse.json({ items: [] });
+    const locale = await getServerLocale();
 
     const view = request.nextUrl.searchParams.get("view");
     const items =
       view === "details"
         ? wishlistItemWithProductSchema
             .array()
-            .parse(await getWishlistWithDetails(user.id))
+            .parse(await getWishlistWithDetails(user.id, locale))
         : selectWishlistItemSchema.array().parse(await getWishlist(user.id));
 
     return NextResponse.json({ items });

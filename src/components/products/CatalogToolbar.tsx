@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { CatalogSort } from "./catalog";
+import { useTranslations } from "@/providers/LocaleProvider";
 
 interface CatalogToolbarProps {
   count: number;
@@ -30,6 +31,7 @@ export function CatalogToolbar({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useTranslations();
 
   const updateSort = (nextSort: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -43,7 +45,7 @@ export function CatalogToolbar({
   return (
     <div className="flex flex-col gap-3 border-y border-border-primary py-3.5 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-color-secondary" aria-live="polite">
-        {count} {count === 1 ? "product" : "products"}
+        {count} {count === 1 ? t.catalog.product : t.catalog.products}
       </p>
 
       <div className="flex items-center justify-between gap-2 sm:justify-end">
@@ -52,7 +54,7 @@ export function CatalogToolbar({
             type="button"
             variant="ghost"
             size="xs"
-            aria-label="Comfortable product grid"
+            aria-label={t.catalog.gridComfortable}
             aria-pressed={density === "comfortable"}
             onClick={() => onDensityChange("comfortable")}
             className={cn(
@@ -66,7 +68,7 @@ export function CatalogToolbar({
             type="button"
             variant="ghost"
             size="xs"
-            aria-label="Compact product grid"
+            aria-label={t.catalog.gridCompact}
             aria-pressed={density === "compact"}
             onClick={() => onDensityChange("compact")}
             className={cn(
@@ -79,14 +81,14 @@ export function CatalogToolbar({
         </div>
 
         <Select value={sort} onValueChange={updateSort}>
-          <SelectTrigger aria-label="Sort products" className="h-10 w-[158px] bg-background-secondary">
+          <SelectTrigger aria-label={t.catalog.newest} className="h-10 w-[158px] bg-background-secondary">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Newest arrivals</SelectItem>
-            <SelectItem value="price-asc">Price: low to high</SelectItem>
-            <SelectItem value="price-desc">Price: high to low</SelectItem>
-            <SelectItem value="name-asc">Name: A to Z</SelectItem>
+            <SelectItem value="newest">{t.catalog.newest}</SelectItem>
+            <SelectItem value="price-asc">{t.catalog.priceAsc}</SelectItem>
+            <SelectItem value="price-desc">{t.catalog.priceDesc}</SelectItem>
+            <SelectItem value="name-asc">{t.catalog.nameAsc}</SelectItem>
           </SelectContent>
         </Select>
       </div>

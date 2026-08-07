@@ -65,12 +65,18 @@ export function ProductForm({
     }
 
     formData.append("name", basicInfoRef.current.name);
+    formData.append("nameFr", basicInfoRef.current.nameFr);
     formData.append("description", basicInfoRef.current.description);
+    formData.append("descriptionFr", basicInfoRef.current.descriptionFr);
     formData.append("brand", basicInfoRef.current.brand);
     formData.append("ingredients", basicInfoRef.current.ingredients);
+    formData.append("ingredientsFr", basicInfoRef.current.ingredientsFr);
     formData.append("usage", basicInfoRef.current.usage);
+    formData.append("usageFr", basicInfoRef.current.usageFr);
     formData.append("warnings", basicInfoRef.current.warnings);
+    formData.append("warningsFr", basicInfoRef.current.warningsFr);
     formData.append("tags", JSON.stringify(basicInfoRef.current.tags));
+    formData.append("tagsFr", JSON.stringify(basicInfoRef.current.tagsFr));
     formData.append("price", String(basicInfoRef.current.price));
     if (basicInfoRef.current.compareAtPrice != null) formData.append("compareAtPrice", String(basicInfoRef.current.compareAtPrice));
     formData.append("category", basicInfoRef.current.category);
@@ -101,6 +107,7 @@ export function ProductForm({
     const variantsForSubmit = variantsData.map((v) => ({
       id: v.id,
       flavor: v.flavor,
+      flavorFr: v.flavorFr,
       form: v.form,
       quantity: v.quantity,
       quantityUnit: v.quantityUnit,

@@ -4,7 +4,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { UserMenu } from "./UserMenu";
-import { SearchInput } from "./SearchInput";
 import {
   Sheet,
   SheetContent,
@@ -17,32 +16,31 @@ import { CartLink } from "./CartLink";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import EditProfile from "./EditProfile";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslations } from "@/providers/LocaleProvider";
 /** FUNCTIONALITY */
 import { useSession } from "@/lib/auth/client";
 import { useManager } from "@/hooks/useManager";
-import dynamic from "next/dynamic";
 import { useAuthMutation } from "@/hooks/auth/useAuthMutation";
 /** ICONS */
 import { Menu, User, ReceiptText, LogOut } from "lucide-react";
 
-const EditProfile = dynamic(() => import("./EditProfile"), {
-  ssr: false,
-});
-
 export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: string | null }) => {
   const { data: session, isPending } = useSession();
+  const t = useTranslations();
 
   const editProfileManager = useManager();
   const { signOut } = useAuthMutation();
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex w-full items-center justify-between gap-3 border-b border-border/80 bg-background/90 px-3.5 py-3 backdrop-blur-lg xs:px-6 sm:px-8">
-        <Link href="/" className="order-2 shrink-0 text-lg font-black text-foreground lg:order-none">{logoUrl ? <Image src={logoUrl} alt={storeName} width={120} height={40} className="h-10 w-auto object-contain" priority/> : storeName}</Link>
+      <header className="sticky top-0 z-40 flex w-full items-center gap-2 border-b border-border/80 bg-background/90 px-3.5 py-2.5 backdrop-blur-lg xs:px-6 sm:px-8 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-6 lg:py-3">
+        <Link href="/" className="order-2 min-w-0 flex-1 truncate text-center text-lg font-black text-foreground lg:order-none lg:flex-none lg:justify-self-start lg:text-start">{logoUrl ? <Image src={logoUrl} alt={storeName} width={120} height={40} className="mx-auto h-9 w-auto object-contain lg:mx-0" priority/> : storeName}</Link>
         {/* Mobile Menu Trigger */}
         <Sheet>
           <SheetTrigger asChild>
-            <button className="flex px-4 py-2 lg:hidden hover:opacity-75 transition-opacity">
+            <button className="order-1 grid size-10 shrink-0 place-items-center rounded-xl transition hover:bg-muted hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden" aria-label="فتح القائمة">
               <Menu size={22} />
             </button>
           </SheetTrigger>
@@ -51,7 +49,7 @@ export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: str
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="px-6 py-4 border-b border-border-primary">
-                <SheetTitle className="text-lg font-semibold">القائمة</SheetTitle>
+                <SheetTitle className="text-lg font-semibold">{t.nav.menu}</SheetTitle>
               </div>
 
               {/* Navigation Links */}
@@ -99,7 +97,7 @@ export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: str
                             className="flex items-center px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
                           >
                             <ReceiptText className="ms-2" size={16} />
-                            <span>طلباتي</span>
+                            <span>{t.nav.orders}</span>
                           </Link>
                         </SheetClose>
                       </li>
@@ -111,7 +109,7 @@ export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: str
                             className="flex items-center w-full px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
                           >
                             <User className="ms-2" size={16} />
-                            <span>الملف الشخصي</span>
+                            <span>{t.nav.profile}</span>
                           </button>
                         </SheetClose>
                       </li>
@@ -126,7 +124,7 @@ export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: str
                           className="flex gap-2 items-center w-full px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
                         >
                           <LogOut size={16} />
-                          <span>تسجيل الخروج</span>
+                          <span>{t.nav.logout}</span>
                         </button>
                       </li>
                     </>
@@ -140,7 +138,7 @@ export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: str
                           href="/login"
                           className="flex items-center px-4 py-2 rounded-md hover:bg-color-secondary transition-colors text-sm font-medium"
                         >
-                            تسجيل الدخول
+                            {t.nav.login}
                         </Link>
                       </SheetClose>
                     </li>
@@ -152,7 +150,7 @@ export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: str
         </Sheet>
 
         {/* Desktop Navigation */}
-        <ul className="justify-between hidden gap-2 text-sm lg:flex">
+        <div className="hidden items-center justify-center gap-2 text-sm lg:flex lg:justify-self-center">
           {isPending ? (
             <li className="items-center justify-center hidden lg:flex">
               <Skeleton className="w-24 h-9 rounded-md" />
@@ -167,25 +165,19 @@ export const Navbar = ({ storeName, logoUrl }: { storeName: string; logoUrl: str
                 href="/login"
                 className="flex h-10 items-center justify-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
               >
-                تسجيل الدخول
+                {t.nav.login}
               </Link>
             </li>
           )}
-        </ul>
-
-        {/* Search Input */}
-        <SearchInput />
+        </div>
 
         {/* Cart and Wishlist Buttons */}
-        <ul className="flex gap-2">
-          <li className="flex items-center justify-center"><ThemeToggle /></li>
-          <li className="flex items-center justify-center">
-            <CartLink />
-          </li>
-          <li className="flex items-center justify-center">
-            <WishlistLink />
-          </li>
-        </ul>
+        <div className="order-3 flex shrink-0 items-center gap-1.5 lg:order-none lg:justify-self-end">
+          <LanguageSwitcher />
+          <ThemeToggle />
+          <CartLink />
+          <WishlistLink />
+        </div>
       </header>
 
       <EditProfile manager={editProfileManager} />

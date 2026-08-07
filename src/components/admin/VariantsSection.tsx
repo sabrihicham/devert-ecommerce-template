@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { VariantForm, type VariantFormRef } from "./VariantForm";
 import type { VariantFormData, VariantSubmitData } from "@/types/admin";
 export type VariantsSectionRef = { getVariants: () => VariantSubmitData[]; getImages: () => Record<string, File[]>; reset: () => void };
-const empty: VariantFormData = { flavor: "", form: "other", quantity: 1, quantityUnit: "piece", servings: null, sku: "", price: 0, compareAtPrice: null, stock: 0, images: [], isActive: true };
+const empty: VariantFormData = { flavor: "", flavorFr: "", form: "other", quantity: 1, quantityUnit: "piece", servings: null, sku: "", price: 0, compareAtPrice: null, stock: 0, images: [], isActive: true };
 export const VariantsSection = forwardRef<VariantsSectionRef, { initialVariants?: VariantFormData[] }>(({ initialVariants }, ref) => {
   const [variants, setVariants] = useState((initialVariants?.length ? initialVariants : [empty]).map((data, key) => ({ key, data })));
   const refs = useRef(new Map<number, VariantFormRef>());

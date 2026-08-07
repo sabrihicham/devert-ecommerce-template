@@ -7,9 +7,11 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 /** ICONS */
 import { ShoppingBag } from "lucide-react";
+import { useTranslations } from "@/providers/LocaleProvider";
 
 export const CartLink = () => {
   const { items: cartProducts, isFetching } = useCart();
+  const t = useTranslations();
 
   if (isFetching) {
     return <Skeleton className="size-10 rounded-md" />;
@@ -23,7 +25,7 @@ export const CartLink = () => {
   return (
     <Link
       href="/cart"
-      aria-label="سلة التسوق"
+      aria-label={t.nav.cart}
       className="relative rounded-lg p-2.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
     >
       <ShoppingBag size={18} />

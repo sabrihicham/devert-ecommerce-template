@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
 import { getAllProducts } from "@/app/actions";
+import { getServerLocale } from "@/lib/i18n/server";
 import { pickFirst, searchProducts } from "@/utils";
 import { GridProducts, ProductItem } from "@/components/products";
 
@@ -9,7 +10,8 @@ interface SearchProps {
 }
 
 async function SearchResults({ searchParams }: SearchProps) {
-  const [products, params] = await Promise.all([getAllProducts(), searchParams]);
+  const locale = await getServerLocale();
+  const [products, params] = await Promise.all([getAllProducts(locale), searchParams]);
 
   const q = pickFirst(params, "q");
   const filteredProducts = searchProducts(products, q);

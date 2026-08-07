@@ -43,6 +43,7 @@ export const cartRepository = {
           id: row.variant.id,
           productId: row.variant.productId,
           flavor: row.variant.flavor,
+          flavorFr: row.variant.flavorFr,
           form: row.variant.form,
           quantity: Number(row.variant.quantity),
           quantityUnit: row.variant.quantityUnit,
@@ -61,14 +62,16 @@ export const cartRepository = {
         product: {
           id: row.product.id,
           name: row.product.name,
+          nameFr: row.product.nameFr,
           description: row.product.description,
+          descriptionFr: row.product.descriptionFr,
           price: Number(row.variant.price),
           compareAtPrice: row.product.compareAtPrice === null ? null : Number(row.product.compareAtPrice),
           stock: row.product.stock,
           category: row.product.category,
           img: row.product.img,
           isFeatured: row.product.isFeatured, isBestSeller: row.product.isBestSeller, isNewArrival: row.product.isNewArrival, status: row.product.status, publishedAt: row.product.publishedAt?.toISOString() ?? null,
-          brand: row.product.brand, ingredients: row.product.ingredients, usage: row.product.usage, warnings: row.product.warnings, tags: row.product.tags,
+          brand: row.product.brand, ingredients: row.product.ingredients, ingredientsFr: row.product.ingredientsFr, usage: row.product.usage, usageFr: row.product.usageFr, warnings: row.product.warnings, warningsFr: row.product.warningsFr, tags: row.product.tags, tagsFr: row.product.tagsFr,
           createdAt:
             row.product.createdAt?.toISOString() ?? new Date().toISOString(),
           updatedAt:

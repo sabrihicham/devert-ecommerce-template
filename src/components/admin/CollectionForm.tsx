@@ -40,6 +40,9 @@ export function CollectionForm({
     useCollectionMutation();
 
   const [name, setName] = useState(collection?.name || "");
+  const [nameFr, setNameFr] = useState(collection?.nameFr || collection?.name || "");
+  const [description, setDescription] = useState(collection?.description || "");
+  const [descriptionFr, setDescriptionFr] = useState(collection?.descriptionFr || collection?.description || "");
   const [slug, setSlug] = useState(collection?.slug || "");
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -60,7 +63,7 @@ export function CollectionForm({
     setErrors({});
 
     const data = new FormData();
-    data.set("name", name.trim()); data.set("slug", slugify(slug));
+    data.set("name", name.trim()); data.set("nameFr", nameFr.trim()); data.set("description", description.trim()); data.set("descriptionFr", descriptionFr.trim()); data.set("slug", slugify(slug));
     if (image) data.set("image", image);
 
     const result = isEdit
@@ -97,6 +100,18 @@ export function CollectionForm({
         {errors?.name && (
           <p className="text-sm font-medium text-red-400">{errors.name[0]}</p>
         )}
+      </div>
+
+      <div dir="ltr" className="space-y-2 rounded-xl border border-border bg-muted/30 p-4">
+        <Label htmlFor="collection-name-fr">Nom de la catégorie *</Label>
+        <Input id="collection-name-fr" value={nameFr} onChange={(event) => setNameFr(event.target.value)} placeholder="Protéines" />
+        <Label htmlFor="collection-description-fr">Description française</Label>
+        <Input id="collection-description-fr" value={descriptionFr} onChange={(event) => setDescriptionFr(event.target.value)} placeholder="Découvrez nos protéines" />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="collection-description">وصف الفئة</Label>
+        <Input id="collection-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="وصف مختصر للفئة" />
       </div>
 
       <div className="space-y-2">

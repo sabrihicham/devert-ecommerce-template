@@ -49,8 +49,10 @@ export const wishlistRepository = {
         product: {
           id: row.product.id,
           name: row.product.name,
+          nameFr: row.product.nameFr,
           description: row.product.description,
-          brand: row.product.brand, ingredients: row.product.ingredients, usage: row.product.usage, warnings: row.product.warnings, tags: row.product.tags,
+          descriptionFr: row.product.descriptionFr,
+          brand: row.product.brand, ingredients: row.product.ingredients, ingredientsFr: row.product.ingredientsFr, usage: row.product.usage, usageFr: row.product.usageFr, warnings: row.product.warnings, warningsFr: row.product.warningsFr, tags: row.product.tags, tagsFr: row.product.tagsFr,
           price: Number(row.product.price),
           compareAtPrice: row.product.compareAtPrice == null ? null : Number(row.product.compareAtPrice), stock: row.product.stock, isBestSeller: row.product.isBestSeller, isNewArrival: row.product.isNewArrival, status: row.product.status, publishedAt: row.product.publishedAt?.toISOString() ?? null,
           category: row.product.category,
@@ -63,7 +65,7 @@ export const wishlistRepository = {
           variants: (variantsByProduct.get(row.product.id) || []).map((v) => ({
             id: v.id,
             productId: v.productId,
-            flavor: v.flavor, form: v.form, quantity: Number(v.quantity), quantityUnit: v.quantityUnit, servings: v.servings, sku: v.sku, price: Number(v.price), compareAtPrice: v.compareAtPrice == null ? null : Number(v.compareAtPrice), stock: v.stock, isActive: v.isActive,
+            flavor: v.flavor, flavorFr: v.flavorFr, form: v.form, quantity: Number(v.quantity), quantityUnit: v.quantityUnit, servings: v.servings, sku: v.sku, price: Number(v.price), compareAtPrice: v.compareAtPrice == null ? null : Number(v.compareAtPrice), stock: v.stock, isActive: v.isActive,
             images: v.images,
             createdAt: v.createdAt?.toISOString() ?? new Date().toISOString(),
             updatedAt: v.updatedAt?.toISOString() ?? new Date().toISOString(),

@@ -9,6 +9,7 @@ import {
 import { getAllProducts, getProduct } from "@/app/actions";
 import { pickFirst } from "@/utils/pickFirst";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
+import { getServerLocale } from "@/lib/i18n/server";
 
 type PageProps = {
   params: Promise<{ id: string; category: string }>;
@@ -58,7 +59,8 @@ async function DynamicProductContent({
   searchParams: Promise<{ variant: string | undefined }>;
 }) {
   const [{ id, category }, sp] = await Promise.all([params, searchParams]);
-  const selectedVariantColor = pickFirst(sp, "variant");
+  const locale = await getServerLocale();
+  const selectedVariantId = pickFirst(sp, "variant");
   const productId = Number(id);
 
   if (!Number.isInteger(productId) || productId <= 0) {
@@ -70,9 +72,10 @@ async function DynamicProductContent({
       <SingleProduct
         id={productId}
         category={category}
-        selectedVariantColor={selectedVariantColor}
+        selectedVariantId={selectedVariantId}
+        locale={locale}
       />
-      <SuspenseRandomProducts productIdToExclude={productId} />
+      <SuspenseRandomProducts productIdToExclude={productId} locale={locale} />
     </>
   );
 }

@@ -7,9 +7,11 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 /** ICONS */
 import { Heart } from "lucide-react";
+import { useTranslations } from "@/providers/LocaleProvider";
 
 export const WishlistLink = () => {
   const { items: wishlistProducts, isFetching } = useWishlist();
+  const t = useTranslations();
 
   if (isFetching) {
     return <Skeleton className="size-10 rounded-md" />;
@@ -18,7 +20,7 @@ export const WishlistLink = () => {
   return (
     <Link
       href="/wishlist"
-      aria-label="المفضلة"
+      aria-label={t.nav.wishlist}
       className="relative rounded-lg p-2.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
     >
       <Heart size={18} />

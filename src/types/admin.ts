@@ -1,6 +1,6 @@
 import type { Product, ProductVariant, ProductWithVariants, Banner, Collection, SupplementForm, QuantityUnit } from "@/lib/db/drizzle/schema";
-export type BasicInfoData = Pick<Product, "name" | "description" | "brand" | "ingredients" | "usage" | "warnings" | "tags" | "price" | "compareAtPrice" | "category" | "isFeatured">;
-export type VariantFormData = Pick<ProductVariant, "flavor" | "form" | "quantity" | "quantityUnit" | "servings" | "sku" | "price" | "compareAtPrice" | "stock" | "images" | "isActive"> & { id?: number };
+export type BasicInfoData = Pick<Product, "name" | "description" | "brand" | "ingredients" | "usage" | "warnings" | "tags" | "price" | "compareAtPrice" | "category" | "isFeatured"> & { nameFr: string; descriptionFr: string; ingredientsFr: string; usageFr: string; warningsFr: string; tagsFr: string[] };
+export type VariantFormData = Pick<ProductVariant, "flavor" | "form" | "quantity" | "quantityUnit" | "servings" | "sku" | "price" | "compareAtPrice" | "stock" | "images" | "isActive"> & { flavorFr: string; id?: number };
 export interface VariantSubmitData extends Omit<VariantFormData, "images"> { id?: number; imageCount: number; existingImages: string[]; removedImages: string[]; }
 export interface ProductFormData { id?: number; basicInfo: BasicInfoData; mainImageUrl?: string; variants: VariantFormData[]; }
 export interface ProductApiResponse { success: boolean; message: string; errors?: Record<string, string[]>; data?: ProductWithVariants; }

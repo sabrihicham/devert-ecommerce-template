@@ -16,7 +16,7 @@ interface ProductItemProps {
 export const ProductItem = ({ product }: ProductItemProps) => {
   const { name, id, img, price, compareAtPrice, category, variants, isNewArrival } = product;
 
-  const productLink = `/${category}/${id}?variant=${encodeURIComponent(variants[0]?.flavor ?? "")}`;
+  const productLink = `/${category}/${id}?variant=${variants[0]?.id ?? ""}`;
   const availableStock = variants.reduce((total, variant) => total + (variant.isActive ? variant.stock : 0), 0);
 
   return (

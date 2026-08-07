@@ -7,6 +7,7 @@ import {
   updateCartItemSchema,
 } from "@/lib/db/drizzle/schema";
 import { getUser } from "@/lib/auth/server";
+import { getServerLocale } from "@/lib/i18n/server";
 import {
   addToCart,
   clearCart,
@@ -24,13 +25,14 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) return NextResponse.json({ items: [] });
+    const locale = await getServerLocale();
 
     const view = request.nextUrl.searchParams.get("view");
     const items =
       view === "details"
         ? cartItemWithDetailsSchema
             .array()
-            .parse(await getCartWithDetails(user.id))
+            .parse(await getCartWithDetails(user.id, locale))
         : selectCartItemSchema.array().parse(await getCart(user.id));
 
     return NextResponse.json({ items });

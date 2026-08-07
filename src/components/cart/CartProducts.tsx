@@ -9,9 +9,11 @@ import { formatPriceFromEuros } from "@/utils/formatters";
 import { ButtonCheckout } from "./ButtonCheckout";
 import { CartProduct } from "./CartProduct";
 import { GridProducts } from "../products/GridProducts";
+import { useTranslations } from "@/providers/LocaleProvider";
 
 export const CartProducts = () => {
   const { items, isPending } = useCartDetails();
+  const t = useTranslations();
 
   if (isPending) {
     return (
@@ -30,7 +32,7 @@ export const CartProducts = () => {
     return (
       <div className="pt-12">
         <h2 className="mb-5 text-xl font-bold sm:text-2xl">
-          YOUR SHOPPING CART
+          {t.cart.title}
         </h2>
         <GridProducts className="grid-cols-1">
           {items.map(({ id, product, quantity, variant }) => (
@@ -47,10 +49,10 @@ export const CartProducts = () => {
         <div className="fixed bottom-4 left-[50%] z-10 flex h-min w-[90%] translate-x-[-50%] overflow-hidden rounded-xl border border-solid border-border-primary bg-background-primary sm:w-[360px]">
           <div className="flex w-1/2 flex-col justify-center gap-2 p-2.5 text-center">
             <div className="flex justify-center gap-2.5 text-sm">
-              <span>Total:</span>
+              <span>{t.cart.total}:</span>
               <span>{formatPriceFromEuros(totalPrice)}</span>
             </div>
-            <span className="text-xs">+ TAX INCL.</span>
+            <span className="text-xs">{t.cart.total}</span>
           </div>
           <div className="w-1/2 border-l border-solid border-border-primary bg-background-secondary">
             <ButtonCheckout cartItemIds={items.map((item) => item.id)} />
@@ -62,16 +64,15 @@ export const CartProducts = () => {
 
   return (
     <div className="flex h-[calc(100vh-91px)] w-full flex-col items-center justify-center gap-2 px-4">
-      <h1 className="mb-6 text-4xl font-bold">YOUR CART IS EMPTY</h1>
+      <h1 className="mb-6 text-4xl font-bold">{t.cart.empty}</h1>
       <p className="mb-4 text-lg">
-        When you have added something to your cart, it will appear here. Want to
-        get started?
+        {t.cart.empty}
       </p>
       <Link
         className="flex h-[40px] min-w-[160px] max-w-[160px] items-center justify-center rounded-md border border-solid border-[#2E2E2E] bg-[#0C0C0C] px-[10px] text-sm font-medium transition-all hover:border-[#454545] hover:bg-background-tertiary"
         href="/"
       >
-        Start
+        {t.common.explore}
       </Link>
     </div>
   );

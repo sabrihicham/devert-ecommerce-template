@@ -18,10 +18,12 @@ export const collections = pgTable(
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
     name: varchar("name", { length: 100 }).notNull(),
+    nameFr: varchar("name_fr", { length: 100 }),
     slug: varchar("slug", { length: 100 }).notNull().unique(),
     imageUrl: text("image_url"),
     mobileImageUrl: text("mobile_image_url"),
     description: text("description"),
+    descriptionFr: text("description_fr"),
     isFeatured: boolean("is_featured").notNull().default(false),
     isVisible: boolean("is_visible").notNull().default(true),
     displayOrder: integer("display_order").notNull().default(0),

@@ -38,12 +38,18 @@ export const productsItems = pgTable(
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
+    nameFr: varchar("name_fr", { length: 255 }),
     description: text("description").notNull(),
+    descriptionFr: text("description_fr"),
     brand: varchar("brand", { length: 150 }).notNull().default(""),
     ingredients: text("ingredients").notNull().default(""),
+    ingredientsFr: text("ingredients_fr"),
     usage: text("usage").notNull().default(""),
+    usageFr: text("usage_fr"),
     warnings: text("warnings").notNull().default(""),
+    warningsFr: text("warnings_fr"),
     tags: text("tags").array().notNull().default(sql`ARRAY[]::text[]`),
+    tagsFr: text("tags_fr").array(),
     price: decimal("price", { precision: 10, scale: 2 }).notNull(),
     compareAtPrice: decimal("compare_at_price", { precision: 10, scale: 2 }),
     category: varchar("category", { length: 100 }).notNull().references(() => collections.slug, { onDelete: "restrict", onUpdate: "cascade" }),
@@ -76,6 +82,7 @@ export const productsVariants = pgTable(
     id: bigserial("id", { mode: "number" }).primaryKey(),
     productId: bigint("product_id", { mode: "number" }).notNull().references(() => productsItems.id, { onDelete: "cascade" }),
     flavor: varchar("flavor", { length: 100 }).notNull().default(""),
+    flavorFr: varchar("flavor_fr", { length: 100 }),
     form: supplementFormEnum("form").notNull().default("other"),
     quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
     quantityUnit: quantityUnitEnum("quantity_unit").notNull().default("piece"),
@@ -108,6 +115,7 @@ const money = z.coerce.number().positive("يجب أن يكون السعر أكب
 const optionalMoney = z.coerce.number().positive().nullable().optional();
 
 export const selectProductSchema = createSelectSchema(productsItems, {
+  nameFr: z.string().nullable().optional(), descriptionFr: z.string().nullable().optional(), ingredientsFr: z.string().nullable().optional(), usageFr: z.string().nullable().optional(), warningsFr: z.string().nullable().optional(), tagsFr: z.array(z.string()).nullable().optional(),
   price: z.coerce.number(), compareAtPrice: z.coerce.number().nullable().optional(), stock: z.coerce.number().int(),
   tags: z.array(z.string()), status: ProductStatusZod, createdAt: z.coerce.string(), updatedAt: z.coerce.string(), publishedAt: z.coerce.string().nullable().optional(),
 });
@@ -118,6 +126,7 @@ export const insertProductSchema = createInsertSchema(productsItems, {
 export const updateProductSchema = selectProductSchema.omit({ createdAt: true }).partial().required({ id: true });
 
 export const selectVariantSchema = createSelectSchema(productsVariants, {
+  flavorFr: z.string().nullable().optional(),
   quantity: z.coerce.number(), price: z.coerce.number(), compareAtPrice: z.coerce.number().nullable().optional(), stock: z.coerce.number().int(), servings: z.coerce.number().int().nullable().optional(),
   form: SupplementFormZod, quantityUnit: QuantityUnitZod, images: z.array(z.string()), createdAt: z.coerce.string(), updatedAt: z.coerce.string(),
 });

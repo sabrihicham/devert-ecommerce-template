@@ -22,6 +22,8 @@ export async function deleteCategoryImage(url: string | null | undefined) {
 export function collectionFields(formData: FormData) {
   return {
     name: String(formData.get("name") || "").trim(), slug: String(formData.get("slug") || "").trim(),
+    nameFr: String(formData.get("nameFr") || "").trim(),
     description: String(formData.get("description") || "").trim() || null,
+    descriptionFr: String(formData.get("descriptionFr") || "").trim() || null,
   };
 }

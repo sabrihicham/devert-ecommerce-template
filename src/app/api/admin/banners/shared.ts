@@ -18,10 +18,13 @@ export function parseBannerFields(formData: FormData) {
   const isActiveRaw = formData.get("isActive");
   return bannerFieldsSchema.parse({
     title: formData.get("title") || null,
+    titleFr: formData.get("titleFr") || null,
     subtitle: formData.get("subtitle") || null,
+    subtitleFr: formData.get("subtitleFr") || null,
     linkUrl: formData.get("linkUrl") || null,
     sortOrder: formData.get("sortOrder") ?? 0,
     isActive: isActiveRaw === null ? true : isActiveRaw === "true",
+    buttonLabelFr: formData.get("buttonLabelFr") || null,
   });
 }
 

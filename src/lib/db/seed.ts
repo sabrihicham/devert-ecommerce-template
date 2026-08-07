@@ -9,6 +9,7 @@ import { collections, productsItems, productsVariants } from "./drizzle/schema";
 
 type SeedVariant = {
   flavor: string;
+  flavorFr?: string;
   form: "powder" | "capsules" | "tablets" | "liquid" | "gummies" | "bars" | "other";
   quantity: string;
   quantityUnit: "g" | "kg" | "ml" | "capsule" | "tablet" | "serving" | "piece";
@@ -22,12 +23,18 @@ type SeedVariant = {
 
 type SeedProduct = {
   name: string;
+  nameFr?: string;
   brand: string;
   description: string;
+  descriptionFr?: string;
   ingredients: string;
+  ingredientsFr?: string;
   usage: string;
+  usageFr?: string;
   warnings: string;
+  warningsFr?: string;
   tags: string[];
+  tagsFr?: string[];
   category: string;
   img: string;
   isFeatured: boolean;
@@ -37,32 +44,40 @@ type SeedProduct = {
 const collectionsSeed = [
   {
     name: "البروتين",
+    nameFr: "Protéines",
     slug: "protein",
     description: "مساحيق البروتين لدعم احتياجك اليومي والتعافي بعد التمرين.",
+    descriptionFr: "Des protéines en poudre pour accompagner vos besoins quotidiens et votre récupération.",
     imageUrl: "https://www.optimumnutrition.com/cdn/shop/files/on-1111968_Image_01.png?v=1756452646&width=2048",
     isFeatured: true,
     displayOrder: 1,
   },
   {
     name: "الكرياتين",
+    nameFr: "Créatine",
     slug: "creatine",
     description: "كرياتين موثوق لدعم القوة والأداء في تمارينك اليومية.",
+    descriptionFr: "Une créatine fiable pour soutenir votre force et vos performances.",
     imageUrl: "https://www.optimumnutrition.com/cdn/shop/files/ON_DTC_PDP_Creatine60srv_6074352_4000x4000_8caf3a00-52f7-432d-857c-2cac79bb31a3.png?width=2048",
     isFeatured: true,
     displayOrder: 2,
   },
   {
     name: "الأحماض الأمينية",
+    nameFr: "Acides aminés",
     slug: "amino-acids",
     description: "خيارات EAA وBCAA للترطيب والدعم أثناء التمرين.",
+    descriptionFr: "Des formules EAA et BCAA pour accompagner l’hydratation et l’entraînement.",
     imageUrl: "https://main.thgimages.com?url=https://static.thcdn.com/productimg/original/12189811-2015082508750389.jpg&format=webp&width=1500&height=1500&fit=cover",
     isFeatured: true,
     displayOrder: 3,
   },
   {
     name: "ما قبل التمرين",
+    nameFr: "Pré-entraînement",
     slug: "pre-workout",
     description: "تركيبات ما قبل التمرين للتركيز والطاقة قبل كل حصة.",
+    descriptionFr: "Des formules pré-entraînement pour l’énergie et la concentration.",
     imageUrl: "https://www.optimumnutrition.com/cdn/shop/files/on-1146471_Image_01.png?v=1755790955&width=2048",
     isFeatured: true,
     displayOrder: 4,
@@ -214,7 +229,9 @@ async function seed() {
         target: collections.slug,
         set: {
           name: sql`excluded.name`,
+          nameFr: sql`excluded.name_fr`,
           description: sql`excluded.description`,
+          descriptionFr: sql`excluded.description_fr`,
           imageUrl: sql`excluded.image_url`,
           isFeatured: sql`excluded.is_featured`,
           displayOrder: sql`excluded.display_order`,
@@ -223,11 +240,11 @@ async function seed() {
       });
       for (const product of products) {
         const existing = await tx.select({ id: productsItems.id }).from(productsItems).where(and(eq(productsItems.name, product.name), eq(productsItems.category, product.category))).limit(1);
-        const values = { name: product.name, brand: product.brand, description: product.description, ingredients: product.ingredients, usage: product.usage, warnings: product.warnings, tags: product.tags, price: product.variants[0].price, category: product.category, img: product.img, isFeatured: product.isFeatured, stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0), isBestSeller: false, isNewArrival: true, status: "published" as const };
+        const values = { name: product.name, nameFr: product.nameFr ?? product.name, brand: product.brand, description: product.description, descriptionFr: product.descriptionFr ?? product.description, ingredients: product.ingredients, ingredientsFr: product.ingredientsFr ?? product.ingredients, usage: product.usage, usageFr: product.usageFr ?? product.usage, warnings: product.warnings, warningsFr: product.warningsFr ?? product.warnings, tags: product.tags, tagsFr: product.tagsFr ?? product.tags, price: product.variants[0].price, category: product.category, img: product.img, isFeatured: product.isFeatured, stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0), isBestSeller: false, isNewArrival: true, status: "published" as const };
         const [savedProduct] = existing.length ? await tx.update(productsItems).set({ ...values, updatedAt: new Date() }).where(eq(productsItems.id, existing[0].id)).returning() : await tx.insert(productsItems).values(values).returning();
         if (!savedProduct) continue;
         for (const variant of product.variants) {
-          await tx.insert(productsVariants).values({ productId: savedProduct.id, ...variant }).onConflictDoUpdate({ target: productsVariants.sku, set: { ...variant, updatedAt: new Date() } });
+          await tx.insert(productsVariants).values({ productId: savedProduct.id, ...variant, flavorFr: variant.flavorFr ?? variant.flavor }).onConflictDoUpdate({ target: productsVariants.sku, set: { ...variant, flavorFr: variant.flavorFr ?? variant.flavor, updatedAt: new Date() } });
         }
         console.log(`✓ ${product.brand} ${product.name}`);
       }

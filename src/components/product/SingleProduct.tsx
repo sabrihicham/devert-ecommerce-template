@@ -2,33 +2,39 @@ import { notFound, redirect } from "next/navigation";
 
 import { getProduct } from "@/app/actions";
 import type { ProductVariant } from "@/lib/db/drizzle/schema";
+import type { Locale } from "@/lib/i18n";
 
 import { AddToCart, MobileAddToCart } from "../cart/AddToCart";
 
 import { EditProductButton } from "./EditProductButton";
 import { ProductImages } from "./ProductImages";
 import { ProductInfo } from "./ProductInfo";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { getDictionary } from "@/lib/i18n";
 
 interface SingleProductProps {
   id: number;
   category: string;
-  selectedVariantColor?: ProductVariant["flavor"];
+  selectedVariantId?: string;
+  locale?: Locale;
 }
 
 export const SingleProduct = async ({
   id,
   category,
-  selectedVariantColor,
+  selectedVariantId,
+  locale = "ar",
 }: SingleProductProps) => {
-  const product = await getProduct(id);
+  const product = await getProduct(id, locale);
 
   if (!product) {
     notFound();
   }
 
   if (product.category !== category) {
-    const variantQuery = selectedVariantColor
-      ? `?variant=${encodeURIComponent(selectedVariantColor)}`
+    const variantQuery = selectedVariantId
+      ? `?variant=${encodeURIComponent(selectedVariantId)}`
       : "";
 
     redirect(`/${product.category}/${id}${variantQuery}`);
@@ -39,66 +45,69 @@ export const SingleProduct = async ({
   }
 
   const selectedVariant = product.variants.find(
-    (variant) => variant.flavor === selectedVariantColor || String(variant.id) === selectedVariantColor,
+    (variant) => String(variant.id) === selectedVariantId || variant.flavor === selectedVariantId,
   );
 
   if (!selectedVariant) {
     redirect(
-      `/${product.category}/${id}?variant=${encodeURIComponent(product.variants[0].flavor)}`,
+      `/${product.category}/${id}?variant=${product.variants[0].id}`,
     );
   }
 
+  const t = getDictionary(locale);
+  const isArabic = locale === "ar";
+  const discount = selectedVariant.compareAtPrice && selectedVariant.compareAtPrice > selectedVariant.price
+    ? Math.round((1 - selectedVariant.price / selectedVariant.compareAtPrice) * 100)
+    : null;
+
   return (
     <>
-      <div className="flex flex-col lg:flex-row lg:gap-6 xl:gap-8">
-        <div className="w-full lg:w-[60%] xl:w-[65%] 2xl:w-[70%]">
-          <ProductImages name={product.name} selectedVariant={selectedVariant} />
+      <div className="mx-auto max-w-7xl px-3 pb-28 pt-2 sm:px-5 lg:px-8 lg:pb-10 lg:pt-5">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] lg:items-start xl:gap-8">
+          <div className="min-w-0 overflow-hidden rounded-2xl border border-border/80 bg-card/30 shadow-sm">
+            <ProductImages name={product.name} selectedVariant={selectedVariant} />
+          </div>
+
+          <div className="hidden min-w-0 lg:block">
+            <div className="sticky top-24 space-y-5">
+              <PurchaseSummary product={product} selectedVariant={selectedVariant} locale={locale} discount={discount} t={t} isArabic={isArabic} />
+              <ProductInfo product={product} selectedVariant={selectedVariant} locale={locale} />
+            </div>
+          </div>
         </div>
 
-        <div className="hidden lg:block lg:w-[40%] xl:w-[35%] 2xl:w-[30%]">
-          <div className="sticky top-20 flex flex-col gap-5">
-            <div className="w-full overflow-hidden rounded border border-solid border-border-primary bg-background-secondary">
-              <div className="flex flex-col justify-between gap-3 border-b border-solid border-border-primary p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <h1 className="text-lg font-semibold">{product.name}</h1>
-                  <EditProductButton productId={product.id} />
-                </div>
-                <span className="text-base font-medium">
-                  {selectedVariant.price.toLocaleString("ar-DZ")} دج
-                </span>
-                <p className="line-clamp-5 break-all text-sm text-color-secondary">
-                  {product.description}
-                </p>
-              </div>
+        <div className="mt-5 space-y-5 lg:hidden">
+          <PurchaseSummary product={product} selectedVariant={selectedVariant} locale={locale} discount={discount} t={t} isArabic={isArabic} compact />
+          <ProductInfo product={product} selectedVariant={selectedVariant} locale={locale} />
+        </div>
 
-              <AddToCart product={product} selectedVariant={selectedVariant} />
-            </div>
-
-            <ProductInfo product={product} />
-          </div>
+        <div className="mt-8 hidden lg:block">
+          <p className="mb-3 text-sm font-semibold text-muted-foreground">{isArabic ? "الوسوم" : "Tags"}</p>
+          <div className="flex flex-wrap gap-2">{product.tags.map((tag) => <Badge key={tag} variant="outline">{tag}</Badge>)}</div>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-2 lg:hidden">
+          {product.tags.map((tag) => <Badge key={tag} variant="outline">{tag}</Badge>)}
         </div>
       </div>
 
-      <div className="mt-6 px-2 xs:px-4 sm:px-6 md:px-8 lg:hidden">
-        <ProductInfo product={product} />
-      </div>
-
-      <div className="safe-area-bottom fixed bottom-0 left-0 right-0 z-50 border-t border-border-primary bg-background-primary lg:hidden">
-        <div className="px-4 py-3">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex flex-col">
-              <h2 className="max-w-[200px] truncate text-sm font-semibold">
-                {product.name}
-              </h2>
-              <span className="text-sm font-medium">
-                {selectedVariant.price.toLocaleString("ar-DZ")} دج
-              </span>
-            </div>
+      <div className="safe-area-bottom fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/95 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur lg:hidden">
+        <div className="mx-auto max-w-7xl px-3 py-2.5 sm:px-5">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="min-w-0 truncate text-xs font-semibold text-foreground">{product.name}</p>
+            <p className="shrink-0 text-sm font-black text-primary">{selectedVariant.price.toLocaleString("ar-DZ")} {isArabic ? "دج" : "DZD"}</p>
           </div>
-
           <MobileAddToCart product={product} selectedVariant={selectedVariant} />
         </div>
       </div>
     </>
   );
 };
+
+function PurchaseSummary({ product, selectedVariant, locale, discount, t, isArabic, compact = false }: { product: Awaited<ReturnType<typeof getProduct>> extends infer P ? Exclude<P, null> : never; selectedVariant: ProductVariant; locale: Locale; discount: number | null; t: ReturnType<typeof getDictionary>; isArabic: boolean; compact?: boolean }) {
+  return <Card className="overflow-hidden border-border/80 shadow-sm"><CardContent className={compact ? "p-4" : "p-5"}>
+    <div className="mb-3 flex items-start justify-between gap-3"><div className="min-w-0"><p className="mb-1 text-xs font-medium text-primary">{product.brand}</p><h1 className="text-xl font-bold leading-tight tracking-tight sm:text-2xl">{product.name}</h1></div><EditProductButton productId={product.id} /></div>
+    <div className="mb-4 flex flex-wrap items-center gap-2"><span className="text-2xl font-black text-primary">{selectedVariant.price.toLocaleString("ar-DZ")} <span className="text-sm font-semibold">{isArabic ? "دج" : "DZD"}</span></span>{selectedVariant.compareAtPrice && selectedVariant.compareAtPrice > selectedVariant.price ? <><span className="text-sm text-muted-foreground line-through">{selectedVariant.compareAtPrice.toLocaleString("ar-DZ")} {isArabic ? "دج" : "DZD"}</span>{discount ? <Badge variant="destructive">-{discount}%</Badge> : null}</> : null}</div>
+    <p className="mb-5 whitespace-pre-line text-sm leading-7 text-muted-foreground">{product.description}</p>
+    {!compact && <AddToCart product={product} selectedVariant={selectedVariant} />}
+  </CardContent></Card>;
+}

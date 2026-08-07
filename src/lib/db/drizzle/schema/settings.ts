@@ -20,6 +20,7 @@ export const storeSettings = pgTable(
   {
     id: integer("id").primaryKey().default(1),
     storeName: text("store_name").notNull(),
+    storeNameFr: text("store_name_fr"),
     logoUrl: text("logo_url"),
     storePhone: text("store_phone").notNull(),
     whatsappNumber: text("whatsapp_number"),
@@ -27,6 +28,7 @@ export const storeSettings = pgTable(
     addressCity: text("address_city"),
     addressWilaya: text("address_wilaya"),
     bannerText: text("banner_text"),
+    bannerTextFr: text("banner_text_fr"),
     bannerActive: boolean("banner_active").notNull().default(false),
     minOrderAmountCents: integer("min_order_amount_cents"),
     maxPendingOrdersPerPhone: integer("max_pending_orders_per_phone"),
@@ -62,6 +64,7 @@ export const selectStoreSettingsSchema = createSelectSchema(storeSettings, {
 export const updateStoreSettingsSchema = z
   .object({
     storeName: z.string().trim().min(1, "Store name is required"),
+    storeNameFr: z.string().trim().min(1, "French store name is required").optional(),
     logoUrl: z.string().url().nullable().optional(),
     storePhone: z
       .string()
@@ -83,6 +86,7 @@ export const updateStoreSettingsSchema = z
       .max(280, "Banner text must be 280 characters or fewer")
       .nullable()
       .optional(),
+    bannerTextFr: z.string().trim().max(280).nullable().optional(),
     bannerActive: z.boolean(),
     minOrderAmountCents: z
       .coerce

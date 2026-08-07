@@ -34,10 +34,12 @@ function transformCollection(
   return {
     id: row.id,
     name: row.name,
+    nameFr: row.nameFr,
     slug: row.slug,
     imageUrl: row.imageUrl,
     mobileImageUrl: row.mobileImageUrl,
     description: row.description,
+    descriptionFr: row.descriptionFr,
     isFeatured: row.isFeatured,
     isVisible: row.isVisible,
     displayOrder: row.displayOrder,

@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { z } from "zod";
 
 import { getUser } from "@/lib/auth/server";
+import { getServerLocale } from "@/lib/i18n/server";
 import { getCartWithDetails, clearCart } from "@/services/cart.service";
 import { createCompleteOrder } from "@/services/orders.service";
 import { sendEmail } from "@/lib/email";
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const locale = await getServerLocale();
 
     const parsed = CreateOrderSchema.safeParse(await request.json());
     if (!parsed.success) {
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
     const { cartItemIds, name, email, phone, line1, line2, city, wilaya } =
       parsed.data;
 
-    const cartItems = await getCartWithDetails(user.id);
+    const cartItems = await getCartWithDetails(user.id, locale);
     const selectedItems = cartItems.filter((item) =>
       cartItemIds.includes(item.id),
     );
